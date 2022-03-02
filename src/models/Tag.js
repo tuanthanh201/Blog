@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-const PostSchema = new Schema({
+const TagSchema = new Schema({
   content: {
     type: String,
     required: true,
@@ -12,4 +12,4 @@ const PostSchema = new Schema({
   },
 })
 
-module.exports = Post = mongoose.model('post', PostSchema)
+module.exports = Tag = mongoose.model('tag', TagSchema)

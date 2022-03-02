@@ -1,23 +1,45 @@
 const _ = require('lodash')
-const { gql } = require('apollo-server')
+const fs = require('fs')
+const path = require('path')
 
-const postTypeDefs = require('./post/typeDefs')
-const userTypeDefs = require('./user/typeDefs')
-const tagTypeDefs = require('./tag/typeDefs')
+const mergeResolversAndTypeDefs = () => {
+  let resolvers = {}
+  let typeDefs = [
+    `
+      type Query
+      type Mutation
+    `,
+  ]
+  const resolversFileName = 'resolvers.js'
+  const typeDefsFileName = 'typeDef.gql'
 
-const postResolvers = require('./post/resolvers')
-const userResolvers = require('./user/resolvers')
-const tagResolvers = require('./tag/resolvers')
+  const fileNames = fs.readdirSync(__dirname)
+  for (const fileName of fileNames) {
+    const filePath = path.join(__dirname, fileName)
+    const isDirectory = fs.lstatSync(filePath).isDirectory()
+    if (isDirectory) {
+      if (fs.existsSync(path.join(filePath, typeDefsFileName))) {
+        const moduleTypeDefs = fs.readFileSync(
+          path.join(filePath, typeDefsFileName),
+          'utf8'
+        )
+        typeDefs = [...typeDefs, moduleTypeDefs]
+      }
 
-const baseTypeDefs = gql`
-  type Query
-  type Mutation
-`
+      if (fs.existsSync(path.join(filePath, resolversFileName))) {
+        const moduleResolvers = require(`${path.join(
+          filePath,
+          resolversFileName
+        )}`)
 
-const typeDefs = [baseTypeDefs, postTypeDefs, userTypeDefs, tagTypeDefs]
-const resolvers = _.merge({}, postResolvers, userResolvers, tagResolvers)
+        resolvers = _.merge(resolvers, moduleResolvers)
+      }
+    }
+  }
 
-module.exports = {
-  typeDefs,
-  resolvers,
+  return { typeDefs, resolvers }
 }
+
+const { typeDefs, resolvers } = mergeResolversAndTypeDefs()
+
+module.exports = { typeDefs, resolvers }

@@ -73,6 +73,14 @@ const deleteById = async (id) => {
   }
 }
 
+const populate = async(post, query) => {
+  try {
+    return await user.populate(query).execPopulate()
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 module.exports = {
   insert,
   insertMany,
@@ -83,4 +91,5 @@ module.exports = {
   findAll,
   updateById,
   deleteById,
+  populate
 }

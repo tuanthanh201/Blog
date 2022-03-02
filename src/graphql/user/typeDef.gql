@@ -1,0 +1,28 @@
+input RegisterInput {
+  username: String!
+  email: String!
+  password: String!
+  bio: String
+}
+input LoginInput {
+  email: String!
+  password: String!
+}
+type User {
+  id: ID!
+  # token: String!
+  username: String!
+  email: String!
+  bio: String
+}
+extend type Query {
+  findUserById(userId: ID!): User
+  findAllUsers: [User]
+  getMe: User
+}
+extend type Mutation {
+  updateBio(userId: ID!, bio: String!): User
+  register(registerInput: RegisterInput!): User!
+  login(loginInput: LoginInput!): User!
+  logout: String
+}
