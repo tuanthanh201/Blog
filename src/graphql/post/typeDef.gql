@@ -1,7 +1,7 @@
 input PostInput {
   title: String!
   body: String!
-  image: String
+  image: String!
   tags: String!
 }
 type Post {
