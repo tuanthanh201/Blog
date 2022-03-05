@@ -4,9 +4,9 @@ type Tag {
   createdAt: String!
 }
 extend type Query {
-  getTagByContent(content: String!): Tag
-  getTagById(tagId: ID!): Tag
-  getTags: [Tag]
+  findTagById(tagId: ID!): Tag
+  findTagsByContent(content: String!): [Tag]
+  findAllTags: [Tag]
 }
 extend type Mutation {
   createTag(content: String!): Tag!

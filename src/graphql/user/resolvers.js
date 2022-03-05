@@ -1,12 +1,12 @@
 const resolvers = {
   Query: {
-    async findUserById(_, args, { dataSources }) {
-      return await dataSources.userService.findUserById(args)
+    async findUserById(parent, args, { dataSources }) {
+      return await dataSources.userService.findUserById(args.userId)
     },
-    async findAllUsers(_, __, { dataSources }) {
+    async findAllUsers(parent, __, { dataSources }) {
       return await dataSources.userService.findAllUsers()
     },
-    async getMe(_, __, { dataSources }) {
+    async getMe(parent, __, { dataSources }) {
       return await dataSources.userService.getMe()
     },
   },

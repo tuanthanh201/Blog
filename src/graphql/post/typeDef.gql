@@ -1,3 +1,8 @@
+input PostInput {
+  title: String!
+  body: String!
+  image: String
+}
 type Post {
   id: ID!
   author: User!
@@ -20,15 +25,17 @@ type Comment {
 extend type Query {
   findPostById(postId: ID!): Post
   findAllPosts: [Post]
-  findPostsByTitle(title: String!): [Post]
-  findPostsByTags(tags: [String]!): [Post]
+  findPostsByTerm(term: String!): [Post]
 }
 extend type Mutation {
-  editPost(postId: ID!, body: String!): Post!
-  deletePost(postId: ID!): String!
-  addTag(postId: ID!, tag: String!): Post!
+  createPost(postInput: PostInput!, userId: ID!): Post!
+  deleteImage(postId: ID!): Post!
+  editPost(postId: ID!, postInput: PostInput!): Post!
+  deletePost(postId: ID!): String
+  addTag(postId: ID!, tagId: ID!): Post!
   removeTag(postId: ID!, tagId: ID!): Post!
   createComment(postId: ID!, body: String!): Post!
+  editComment(postId: ID!, commentId: ID!, body: String!): Post!
   deleteComment(postId: ID!, commentId: ID!): Post!
   likePost(postId: ID!): Post!
 }

@@ -17,9 +17,9 @@ const insertMany = async (posts) => {
   }
 }
 
-const save = async (user) => {
+const save = async (post) => {
   try {
-    return await user.save()
+    return await post.save()
   } catch (error) {
     throw new Error(error)
   }

@@ -17,7 +17,43 @@ const insertMany = async (tags) => {
   }
 }
 
+const findById = async (id) => {
+  try {
+    return await Tag.findById(id)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const findOne = async (cond) => {
+  try {
+    return await Tag.findOne(cond)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const findMany = async (cond) => {
+  try {
+    return await Tag.find(cond)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const findAll = async () => {
+  try {
+    return await Tag.find()
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 module.exports = {
   insert,
   insertMany,
+  findById,
+  findOne,
+  findMany,
+  findAll,
 }

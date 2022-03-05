@@ -1,6 +1,6 @@
 const { UserInputError } = require('apollo-server')
 
-const validateInput = (args) => {
+const validateUserInput = (args) => {
   const { username, email, password } = args
   if (username !== undefined && username.trim() === '') {
     throw new UserInputError('Username must not be empty')
@@ -25,4 +25,4 @@ const validateInput = (args) => {
   }
 }
 
-module.exports = validateInput
+module.exports = validateUserInput

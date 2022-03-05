@@ -1,7 +1,9 @@
 const checkAuth = require('./checkAuth')
-const validateInput = require('./validateInput')
+const validateUserInput = require('./validateUserInput')
+const validatePostInput = require('./validatePostInput')
 
 module.exports = {
   checkAuth,
-  validateInput,
+  validateUserInput,
+  validatePostInput,
 }

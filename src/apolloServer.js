@@ -8,12 +8,12 @@ const { typeDefs, resolvers } = require('./graphql')
 const store = require('./repositories')
 
 const PostService = require('./services/PostService')
-// const TagService = require('./services/TagService')
+const TagService = require('./services/TagService')
 const UserService = require('./services/UserService')
 
 const dataSources = () => ({
   postService: new PostService({ store }),
-  // tagService: new TagService({store}),
+  tagService: new TagService({store}),
   userService: new UserService({ store }),
 })
 
@@ -33,7 +33,6 @@ const setupApolloServer = async () => {
   app.use(cookieParser())
 
   app.use((req, res, next) => {
-    console.log(req.cookies)
     try {
       const { token } = req.cookies
       if (token) {
@@ -58,7 +57,7 @@ const setupApolloServer = async () => {
       origin: process.env.FRONT_END_URL,
     },
     bodyParserConfig: {
-      limit: '5mb',
+      limit: '50mb',
     },
   })
 

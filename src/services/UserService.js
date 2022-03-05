@@ -5,7 +5,7 @@ const { AuthenticationError, UserInputError } = require('apollo-server')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
-const { checkAuth, validateInput } = require('../utils')
+const { checkAuth, validateUserInput } = require('../utils')
 
 class UserService extends DataSource {
   constructor({ store }) {
@@ -29,7 +29,7 @@ class UserService extends DataSource {
     return token
   }
 
-  async findUserById({ userId }) {
+  async findUserById(userId) {
     try {
       return await this.store.userRepo.findById(userId)
     } catch (error) {
@@ -60,7 +60,7 @@ class UserService extends DataSource {
 
   async register({ registerInput }) {
     try {
-      validateInput(registerInput)
+      validateUserInput(registerInput)
       let { username, email, password } = registerInput
 
       // can use this so that we don't need to search twice, but the error
@@ -104,6 +104,7 @@ class UserService extends DataSource {
 
   async login({ loginInput }) {
     try {
+      validateUserInput(loginInput)
       const { email, password } = loginInput
 
       // check if user exists
@@ -133,22 +134,20 @@ class UserService extends DataSource {
   async logout() {
     this.context.res.cookie('token', '', {
       httpOnly: false,
-      expires: new Date(0), // Thu, 01 Jan 1970
+      expires: new Date(0),
     })
   }
 
   async updateBio(args) {
     try {
       const { userId, bio } = args
-      console.log(this.context.req.cookies)
-      const user = await checkAuth(this.context.req, this.store.userRepo)
+      // const user = await checkAuth(this.context.req, this.store.userRepo)
 
-      console.log(user)
-      if (userId !== user._id) {
-        throw new AuthenticationError('You are not allowed to edit this bio')
-      }
+      // if (userId !== user._id) {
+      //   throw new AuthenticationError('You are not allowed to edit this bio')
+      // }
 
-      return await this.store.userRepo.updateById(user.id, { bio })
+      return await this.store.userRepo.updateById(userId, { bio })
     } catch (error) {
       throw new Error(error)
     }
