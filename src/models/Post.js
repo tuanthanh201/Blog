@@ -43,8 +43,13 @@ const PostSchema = new Schema({
   ],
   tags: [
     {
-      type: Schema.Types.ObjectId,
-      ref: 'tag',
+      tagId: {
+        type: Schema.Types.ObjectId,
+        ref: 'tag',
+      },
+      content: {
+        type: String,
+      },
     },
   ],
   createdAt: {

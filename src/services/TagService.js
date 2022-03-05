@@ -23,23 +23,24 @@ class UserService extends DataSource {
     }
   }
 
-  async findTagsById(tagIds) {
+  async findTagsByTagObjs(tags) {
     try {
-      const tags = tagIds.map(async (tagId) => {
-        return await this.store.tagRepo.findById(tagId)
-      })
-      return await tags
+      const tagsFound = []
+      for (const tag of tags) {
+        const tagFound = await this.store.tagRepo.findById(tag.tagId)
+        tagsFound.push(tagFound)
+      }
+      return tagsFound
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findTagsByContent({ content }) {
+  async findTagsByContent(content) {
     try {
       if (content === undefined || content.trim() === '') {
         throw new UserInputError('Tag must not be empty')
       }
-
       return await this.store.tagRepo.findMany({
         content: { $regex: `${content}`, $options: 'i' },
       })
@@ -48,36 +49,20 @@ class UserService extends DataSource {
     }
   }
 
-  async findAllTags() {
+  async findTagByContentExact(content) {
     try {
-      return await this.store.tagRepo.findAll()
+      if (content === undefined || content.trim() === '') {
+        throw new UserInputError('Tag must not be empty')
+      }
+      return await this.store.tagRepo.findOne({ content })
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async createTag({ content }) {
+  async findAllTags() {
     try {
-      // TODO: uncomment this
-      // const user = await checkAuth(this.context.req, this.store.userRepo)
-
-      if (content === undefined || content.trim() === '') {
-        throw new UserInputError('Tag must not be empty')
-      }
-
-      // check if tag already exists
-      const tagExists = !!(await this.store.tagRepo.findOne({
-        content: { $regex: `${content}`, $options: 'i' },
-      }))
-
-      if (tagExists) {
-        throw new UserInputError('Tag already exists')
-      }
-
-      const newTag = {
-        content,
-      }
-      return await this.store.tagRepo.insert(newTag)
+      return await this.store.tagRepo.findAll()
     } catch (error) {
       throw new Error(error)
     }

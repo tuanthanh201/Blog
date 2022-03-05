@@ -1,8 +1,8 @@
 const Tag = require('../models/Tag')
 
-const insert = async (tagData) => {
+const insert = async (content) => {
   try {
-    const tag = new Tag(tagData)
+    const tag = new Tag({content})
     return await tag.save()
   } catch (error) {
     throw new Error(error)

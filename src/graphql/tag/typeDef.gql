@@ -6,8 +6,6 @@ type Tag {
 extend type Query {
   findTagById(tagId: ID!): Tag
   findTagsByContent(content: String!): [Tag]
+  findTagByContentExact(content: String!): [Tag]
   findAllTags: [Tag]
-}
-extend type Mutation {
-  createTag(content: String!): Tag!
 }

@@ -36,12 +36,8 @@ class PostService extends DataSource {
     try {
       console.log(term)
       const searchOption = { $regex: `/${term}/`, $options: 'i' }
-      // const posts = await this.store.postRepo.findMany({
-      //   $or: [{ title: searchOption }, { 'tags.content': searchOption }],
-      // })
-      // TODO: Fix search by tags
       const posts = await this.store.postRepo.findMany({
-        'tags.content': "cat"
+        $or: [{ title: searchOption }, { 'tags.content': searchOption }],
       })
       console.log(posts)
       return posts
@@ -52,7 +48,7 @@ class PostService extends DataSource {
 
   async createPost({ postInput, userId }) {
     try {
-      const { title, body, image } = postInput
+      let { title, body, image, tags } = postInput
       // TODO: uncomment this
       // const user = await checkAuth(this.context.req, this.store.userRepo)
       const user = await this.store.userRepo.findById(userId)
@@ -63,11 +59,30 @@ class PostService extends DataSource {
         title,
         body,
       }
-      if (image) {
+
+      // check if user uploads an image
+      if (image !== '') {
         const { Key } = await uploadBase64Image(image)
         newPost.image = Key
       }
+
+      // check if user includes any tags
+      if (tags !== '') {
+        tags = tags.split(' ')
+        console.log(tags)
+        newPost.tags = []
+        for (const content of tags) {
+          console.log(content)
+          let tag = await this.store.tagRepo.findOne({ content })
+          if (!tag) {
+            // if tag doesnt exist then create tag and add it to post
+            tag = await this.store.tagRepo.insert(content)
+          }
+          newPost.tags.push({ tagId: tag._id, content })
+        }
+      }
       newPost = await this.store.postRepo.insert(newPost)
+      // save post to user
       user.posts.push(newPost._id)
       await this.store.userRepo.save(user)
       return newPost
@@ -96,18 +111,32 @@ class PostService extends DataSource {
 
   async editPost(args) {
     try {
-      const { postId, postInput } = args
-      const user = await checkAuth(this.context.req, this.store.userRepo)
+      const { postId, postInput, userId } = args
+      // const user = await checkAuth(this.context.req, this.store.userRepo)
+      const user = await this.store.userRepo.findById(userId)
       validatePostInput(postInput)
 
       if (user.posts.includes(postId)) {
+        // check if user includes tags
+        if (postInput.tags !== '') {
+          const tags = postInput.tags.split(' ')
+          postInput.tags = []
+          for (content of tags) {
+            let tag = await this.store.tagRepo.findOne({ content })
+            if (!tag) {
+              // if tag doesnt exist then create tag and add it to post
+              tag = await this.store.tagRepo.insert(content)
+            }
+            postInput.tags.push({ tagId: tag._id, content })
+          }
+        }
         const newPost = await this.store.bookRepo.updateById(postId, postInput)
         if (!newPost) {
           throw new Error('Post does not exist')
         }
         return newPost
       } else {
-        throw AuthenticationError("You don't have permission to edit this post")
+        throw new AuthenticationError("You don't have permission to edit this post")
       }
     } catch (error) {
       throw new Error(error)
@@ -124,51 +153,10 @@ class PostService extends DataSource {
       //   )
       // }
       await this.store.postRepo.deleteById(postId)
+      user.posts.filter((post) => post !== postId)
+      // remove post from user's posts
+      await this.store.userRepo.save(user)
       return 'Post deleted'
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async addTag({ postId, tagId }) {
-    try {
-      // const user = await checkAuth(this.context.req, this.store.userRepo)
-      const post = await this.store.postRepo.findById(postId)
-      const tag = await this.store.tagRepo.findById(tagId)
-      // if (!user.posts.includes(postId)) {
-      //   throw new AuthenticationError("You don't have permission to edit this post")
-      // }
-      if (!post) {
-        throw new Error("Post doesn't exist")
-      }
-      if (!tag) {
-        throw new Error("Tag doesn't exist")
-      }
-
-      if (post.tags.includes(tag._id)) {
-        throw new UserInputError('This tag has already been added')
-      }
-      post.tags.push(tag._id)
-      return await this.store.postRepo.save(post)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async removeTag({ postId, tagId }) {
-    try {
-      const tag = await this.store.tagRepo.findById(tagId)
-      if (!tag) {
-        throw new UserInputError("Tag doesn't exist")
-      }
-
-      const post = await this.store.postRepo.findById(postId)
-      if (!post) {
-        throw new Error("Post doesn't exist")
-      }
-
-      post.tags.filter((pTag) => pTag !== tag._id)
-      return await this.store.postRepo.save(post)
     } catch (error) {
       throw new Error(error)
     }
@@ -177,18 +165,13 @@ class PostService extends DataSource {
   async createComment({ postId, body }) {
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
-
-
-
+      const post = await this.store.postRepo.findById(postId)
       if (body === undefined || body.trim() === '') {
         throw new UserInputError('Comment must not be empty')
       }
-
-      const post = await this.store.postRepo.findById(postId)
       if (!post) {
         throw new Error("Post doesn't exist")
       }
-
       post.comments.push({ author: user._id, body })
       return await this.store.postRepo.save(post)
     } catch (error) {

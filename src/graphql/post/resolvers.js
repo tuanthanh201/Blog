@@ -5,9 +5,9 @@ const resolvers = {
     async author(parent, args, { dataSources }) {
       return await dataSources.userService.findUserById(parent.author)
     },
-    async tags(parent, args, {dataSources}) {
-      return await dataSources.tagService.findTagsById(parent.tags)
-    }
+    async tags(parent, args, { dataSources }) {
+      return await dataSources.tagService.findTagsByTagObjs(parent.tags)
+    },
   },
   Query: {
     async findPostById(_, args, { dataSources }) {
@@ -32,12 +32,6 @@ const resolvers = {
     },
     async deletePost(_, args, { dataSources }) {
       return await dataSources.postService.deletePost(args.postId)
-    },
-    async addTag(_, args, { dataSources }) {
-      return await dataSources.postService.addTag(args)
-    },
-    async removeTag(_, args, { dataSources }) {
-      return await dataSources.postService.removeTag(args)
     },
     async createComment(_, args, { dataSources }) {
       return await dataSources.postService.createComment(args)

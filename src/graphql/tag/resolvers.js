@@ -1,19 +1,17 @@
 const resolvers = {
   Query: {
-    async findTagById(parent, args, { dataSources }) {
+    async findTagById(_, args, { dataSources }) {
       return await dataSources.tagService.findTagById(args.tagId)
     },
     // TODO: check this ._.
-    async findTagsByContent(_, args, {dataSources}) {
-      return await dataSources.tagService.findTagsByContent(args)
+    async findTagsByContent(_, args, { dataSources }) {
+      return await dataSources.tagService.findTagsByContent(args.content)
+    },
+    async findTagByContentExact(_, args, { dataSources }) {
+      return await dataSources.tagService.findTagByContentExact(args.content)
     },
     async findAllTags(_, __, { dataSources }) {
       return await dataSources.tagService.findAllTags()
-    },
-  },
-  Mutation: {
-    async createTag(_, args, { dataSources }) {
-      return await dataSources.tagService.createTag(args)
     },
   },
 }

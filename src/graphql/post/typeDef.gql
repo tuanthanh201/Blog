@@ -2,6 +2,7 @@ input PostInput {
   title: String!
   body: String!
   image: String
+  tags: String!
 }
 type Post {
   id: ID!
@@ -30,10 +31,8 @@ extend type Query {
 extend type Mutation {
   createPost(postInput: PostInput!, userId: ID!): Post!
   deleteImage(postId: ID!): Post!
-  editPost(postId: ID!, postInput: PostInput!): Post!
+  editPost(postId: ID!, postInput: PostInput!, userId: ID!): Post!
   deletePost(postId: ID!): String
-  addTag(postId: ID!, tagId: ID!): Post!
-  removeTag(postId: ID!, tagId: ID!): Post!
   createComment(postId: ID!, body: String!): Post!
   editComment(postId: ID!, commentId: ID!, body: String!): Post!
   deleteComment(postId: ID!, commentId: ID!): Post!
