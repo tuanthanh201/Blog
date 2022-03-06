@@ -49,6 +49,14 @@ const findMany = async (cond) => {
   }
 }
 
+const findManyAndSort = async (findOptions, sortOptions) => {
+  try {
+    return await Post.find(findOptions).sort(sortOptions)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 const findAll = async () => {
   try {
     return await Post.find()
@@ -73,7 +81,7 @@ const deleteById = async (id) => {
   }
 }
 
-const populate = async(post, query) => {
+const populate = async (post, query) => {
   try {
     return await user.populate(query).execPopulate()
   } catch (error) {
@@ -88,8 +96,9 @@ module.exports = {
   findById,
   findOne,
   findMany,
+  findManyAndSort,
   findAll,
   updateById,
   deleteById,
-  populate
+  populate,
 }

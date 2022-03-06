@@ -2,11 +2,14 @@ const resolvers = {
   Post: {
     likeCount: (parent) => parent.likes.length,
     commentCount: (parent) => parent.comments.length,
-    async author(parent, args, { dataSources }) {
+    async author(parent, _, { dataSources }) {
       return await dataSources.userService.findUserById(parent.author)
     },
-    async tags(parent, args, { dataSources }) {
+    async tags(parent, _, { dataSources }) {
       return await dataSources.tagService.findTagsByTagObjs(parent.tags)
+    },
+    image(parent, _, {dataSources}) {
+      return dataSources.postService.getImageUrl(parent.image)
     },
   },
   Query: {

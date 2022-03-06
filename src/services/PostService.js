@@ -39,7 +39,10 @@ class PostService extends DataSource {
 
   async findAllPosts() {
     try {
-      return await this.store.postRepo.findAll()
+      return await this.store.postRepo.findManyAndSort(
+        {},
+        { createdAt: 'desc' }
+      )
     } catch (error) {
       throw new Error(error)
     }
@@ -74,7 +77,7 @@ class PostService extends DataSource {
       // check if user uploads an image
       if (image.trim() !== '') {
         const { Key } = await uploadBase64Image(image)
-        newPost.image = Key
+        newPost.image = getCloudFrontUrl(Key)
       }
 
       // check if user includes any tags
@@ -98,6 +101,13 @@ class PostService extends DataSource {
     } catch (error) {
       throw new Error(error)
     }
+  }
+
+  getImageUrl = (imageKey) => {
+    if (imageKey) {
+      return getCloudFrontUrl(imageKey)
+    }
+    return null
   }
 
   async deleteImage({ postId }) {
