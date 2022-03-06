@@ -13,14 +13,20 @@
     "apollo-datasource-mongodb": "^0.5.2",
     "apollo-server": "^3.6.3",
     "apollo-server-express": "^3.6.3",
+    "aws-sdk": "^2.1085.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
+    "fs": "0.0.1-security",
     "graphql": "^16.3.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
+    "minisearch": "^5.0.0-beta1",
     "mongoose": "^6.2.3",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "styled-components": "^5.3.3",
+    "utils": "^0.3.1",
+    "uuid": "^8.3.2"
   }
 }
