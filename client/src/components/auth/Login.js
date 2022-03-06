@@ -1,5 +1,10 @@
 import { useNavigate, Link } from 'react-router-dom'
-import { Form, Button } from 'semantic-ui-react'
+import {
+  Form,
+  Button,
+  Message,
+  Header,
+} from 'semantic-ui-react'
 import useInput from '../../hooks/useInput'
 import validateEmail from '../utils/validateEmail'
 
@@ -34,9 +39,11 @@ const Login = (props) => {
   return (
     <div className="form-container">
       <Form>
-        <h2>Login Form</h2>
+        <Header as='h2' textAlign='center' color='teal'>Login Form</Header>
         <Form.Input
           required
+          icon="mail"
+          iconPosition="left"
           label="Email"
           placeholder="Email..."
           value={email}
@@ -46,6 +53,8 @@ const Login = (props) => {
         />
         <Form.Input
           required
+          icon="lock"
+          iconPosition="left"
           label="Password"
           placeholder="Password..."
           type="password"
@@ -54,11 +63,13 @@ const Login = (props) => {
           onBlur={passwordBlurHandler}
           error={passwordError}
         />
-        <p>
+        <Message>
           Don't have an account? <Link to="/register">Register</Link>{' '}
-        </p>
+        </Message>
         <Button
-          primary
+          fluid
+          size='large'
+          color='teal'
           type="submit"
           onClick={submitHandler}
           disabled={!formIsValid}>
