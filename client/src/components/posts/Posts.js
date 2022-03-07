@@ -1,23 +1,8 @@
 import { useState } from 'react'
-import { Dropdown, Grid, Icon } from 'semantic-ui-react'
+import { Dropdown, Icon, Item } from 'semantic-ui-react'
 import Post from './Post'
 
 const POSTS = [
-  {
-    id: '62246940b119254a45546a63',
-    author: {
-      id: '6223195072c6fdd7f600eca6',
-      username: 'alpha',
-    },
-    image:
-      'https://d3sjlfriau3aek.cloudfront.net/fb7d0e6d-653d-4647-a390-86fdf7f0ec8b',
-    likeCount: 0,
-    commentCount: 0,
-    title: 'Testing second time...',
-    body: 'So like, the image should be the key :v',
-    tags: [],
-    createdAt: '1646553408359',
-  },
   {
     id: '6224690c8f5a2721d35bd313',
     author: {
@@ -191,7 +176,7 @@ const Posts = (props) => {
           console.log(data.value)
         }}
       />
-      <Grid celled verticalAlign="middle">
+      <Item.Group divided>
         {POSTS.map((post) => (
           <Post
             key={post.id}
@@ -203,7 +188,7 @@ const Posts = (props) => {
             createdAt={post.createdAt}
           />
         ))}
-      </Grid>
+      </Item.Group>
     </>
   )
 }

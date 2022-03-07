@@ -1,11 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Button, Grid, Icon, Image, List } from 'semantic-ui-react'
-import styled from 'styled-components'
+import { Item, Label } from 'semantic-ui-react'
 import getDate from '../utils/getDate'
-
-const StyledParagraph = styled.p`
-  margin: 0;
-`
 
 const Post = (props) => {
   const {
@@ -21,40 +16,42 @@ const Post = (props) => {
     : 'https://react.semantic-ui.com/images/wireframe/image.png'
 
   return (
-    <Grid.Row>
-      <Grid.Column width={3} as={Link} to={`/posts/${postId}`}>
-        <Image src={imageSrc} />
-      </Grid.Column>
-      <Grid.Column width={12}>
-        <StyledParagraph>
-          Author: <Link to={`/user/${userId}`}>{username}</Link>
-        </StyledParagraph>
-        <StyledParagraph>Posted on: {getDate(createdAt)}</StyledParagraph>
-        <List bulleted horizontal>
-          <List.Item>Tags: </List.Item>
+    <Item>
+      <Item.Image src={imageSrc} as={Link} to={`/posts/${postId}`} />
+
+      <Item.Content>
+        <Item.Header
+          as={Link}
+          to={`/posts/${postId}`}
+          content={title}></Item.Header>
+        <Item.Meta>
+          <p>
+            By: <Link to={`/users/${userId}`}>{username}</Link>
+          </p>
+          <p>{getDate(createdAt)}</p>
+        </Item.Meta>
+        <Item.Description>
+          Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean
+          commodo ligula eget dolor. Aenean massa strong. Cum sociis natoque
+          penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+          Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.
+          Nulla consequat massa quis enim. Donec pede justo, fringilla vel,
+          aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut,
+          imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede link
+          mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum
+          semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula,
+          porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante,
+          dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla
+          ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam
+          ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi.
+        </Item.Description>
+        <Item.Extra>
           {tags.map((tag) => (
-            <List.Item key={tag.id} id={tag.id}>
-              {tag.content}
-            </List.Item>
+            <Label key={tag.id} id={tag.id} content={tag.content} />
           ))}
-        </List>
-        <StyledParagraph>
-          <span>Title: </span>
-          <Link to={`/posts/${postId}`}>{title}</Link>
-        </StyledParagraph>
-      </Grid.Column>
-      <div style={{ marginTop: '1rem' }}>
-        <Button circular negative size="small">
-          <Icon style={{ margin: 0 }} name="trash" />
-        </Button>
-        {/* <Dropdown item icon="ellipsis vertical" pointing='left'>
-            <Dropdown.Menu>
-              <Dropdown.Item icon="edit" as={Link} to="/login" text="Edit" />
-              <Dropdown.Item icon="trash" text="Delete" />
-            </Dropdown.Menu>
-          </Dropdown> */}
-      </div>
-    </Grid.Row>
+        </Item.Extra>
+      </Item.Content>
+    </Item>
   )
 }
 

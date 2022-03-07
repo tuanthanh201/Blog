@@ -11,6 +11,7 @@ import Login from './components/auth/Login'
 import Register from './components/auth/Register'
 import './App.css'
 import SinglePost from './components/post/SinglePost'
+import Profile from './components/profile/Profile'
 
 function App() {
   return (
@@ -23,6 +24,8 @@ function App() {
             <Route path="/login" element={<Login />}></Route>
             <Route path="/register" element={<Register />}></Route>
             <Route path="/posts/:postId" element={<SinglePost />}></Route>
+            <Route path="/post" element={<Profile />}></Route>
+            <Route path="/users/:userId" element={<Profile />}></Route>
             <Route path="*" element={<Navigate to="/" />}></Route>
           </Routes>
         </Container>

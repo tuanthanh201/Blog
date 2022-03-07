@@ -15,6 +15,7 @@ type User {
   email: String!
   bio: String
   posts: [Post]
+  postsCount: Int!
   createdAt: String!
 }
 extend type Query {
