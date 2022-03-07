@@ -11,6 +11,12 @@ const NavBar = (props) => {
       <Menu.Menu position="right">
         <Menu.Item
           as={Link}
+          active={pathname === '/post'}
+          name="post"
+          to="/post"
+        />
+        <Menu.Item
+          as={Link}
           active={pathname === '/login'}
           name="login"
           to="/login"

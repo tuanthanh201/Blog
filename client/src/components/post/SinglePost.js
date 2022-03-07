@@ -24,7 +24,7 @@ const SinglePost = (props) => {
 
   useEffect(() => {
     if (selectedDropdown === 'editPost') {
-      navigate('/')
+      navigate('/post')
     } else if (selectedDropdown === 'deletePost') {
       setShowModal(true)
     } else if (selectedDropdown === 'deleteImage') {

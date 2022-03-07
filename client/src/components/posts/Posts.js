@@ -155,15 +155,14 @@ const Posts = (props) => {
   return (
     <>
       <Dropdown
-        labeled
-        placeholder="Search for blogs..."
+        placeholder="Search for posts..."
         fluid
         multiple
         search
         selection
         options={searchOptions}
         allowAdditions
-        icon={<Icon corner name="search" />}
+        icon={<Icon  name="search" />}
         onAddItem={(event, data) => {
           // need to add a new tag to the list of tags
           setSearchOptions((prev) => [
