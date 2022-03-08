@@ -77,7 +77,7 @@ class PostService extends DataSource {
       // check if user uploads an image
       if (image.trim() !== '') {
         const { Key } = await uploadBase64Image(image)
-        newPost.image = getCloudFrontUrl(Key)
+        newPost.image = Key
       }
 
       // check if user includes any tags
@@ -104,7 +104,7 @@ class PostService extends DataSource {
   }
 
   getImageUrl = (imageKey) => {
-    if (imageKey) {
+    if (imageKey !== '') {
       return getCloudFrontUrl(imageKey)
     }
     return null
@@ -131,29 +131,45 @@ class PostService extends DataSource {
   async editPost(args) {
     try {
       const { postId, postInput, userId } = args
+      validatePostInput(postInput)
       // const user = await checkAuth(this.context.req, this.store.userRepo)
       const user = await this.store.userRepo.findById(userId)
-      validatePostInput(postInput)
+      const post = await this.store.postRepo.findById(postId)
+
+      if (!post) {
+        throw new Error('Post does not exist')
+      }
 
       if (user.posts.some((post) => post._id.toString() === postId)) {
         // check if user includes tags
+        post.tags = []
         if (postInput.tags.trim() !== '') {
           const tags = postInput.tags.split(' ')
-          postInput.tags = []
           for (const content of tags) {
-            let tag = await this.store.tagRepo.findOne({ content })
-            if (!tag) {
-              // if tag doesnt exist then create tag and add it to post
-              tag = await this.store.tagRepo.insert(content)
+            if (content.trim() !== '') {
+              let tag = await this.store.tagRepo.findOne({ content })
+              if (!tag) {
+                // if tag doesnt exist then create tag and add it to post
+                tag = await this.store.tagRepo.insert(content)
+              }
+              post.tags.push({ tagId: tag._id, content })
             }
-            postInput.tags.push({ tagId: tag._id, content })
           }
         }
-        const newPost = await this.store.postRepo.updateById(postId, postInput)
-        if (!newPost) {
-          throw new Error('Post does not exist')
+
+        // check if user includes image
+        if (postInput.image.trim() !== '') {
+          // replace current image with new image
+          if (post.image !== '') {
+            await deleteImages([post.image])
+          }
+          const { Key } = await uploadBase64Image(postInput.image)
+          post.image = Key
         }
-        return newPost
+
+        post.title = postInput.title
+        post.body = postInput.body
+        return await this.store.postRepo.save(post)
       } else {
         throw new AuthenticationError(
           "You don't have permission to edit this post"
@@ -223,11 +239,6 @@ class PostService extends DataSource {
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
       const post = await this.store.postRepo.findById(postId)
-      if (!user.posts.includes) {
-        throw new AuthenticationError(
-          "You don't have permission to edit this post"
-        )
-      }
 
       const comment = post.comments.find((comment) => comment._id === commentId)
       if (!comment) {
