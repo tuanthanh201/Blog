@@ -14,10 +14,10 @@ const inputStateReducer = (state, action) => {
   return initialInputState
 }
 
-const useInput = (validateValue) => {
+const useInput = (validateValue, initialState = initialInputState) => {
   const [inputState, dispatch] = useReducer(
     inputStateReducer,
-    initialInputState
+    initialState
   )
 
   const valueIsValid = validateValue(inputState.value)

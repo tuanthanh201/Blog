@@ -1,58 +1,32 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  Button,
-  Dropdown,
-  Header,
-  Icon,
-  Image,
-  Label,
-  Menu,
-  Message,
-  Segment,
-} from 'semantic-ui-react'
-import ConfirmModal from '../ConfirmModal'
+import { useState } from 'react'
+import { Button, Icon, Label, Menu } from 'semantic-ui-react'
+import ConfirmModal from '../utils/ConfirmModal'
 import Comments from './Comments'
-import imageSrc from './image'
+import EditPost from './EditPost'
+import FadeButton from '../utils/FadeButton'
+import PostContent from './PostContent'
 
 const SinglePost = (props) => {
   const [liked, setLiked] = useState(false)
   const [hideComments, setHideComments] = useState(true)
-  const [selectedDropdown, setSelectedDropdown] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (selectedDropdown === 'editPost') {
-      navigate('/post')
-    } else if (selectedDropdown === 'deletePost') {
-      setShowModal(true)
-    } else if (selectedDropdown === 'deleteImage') {
-      setShowModal(true)
-    }
-  }, [selectedDropdown])
+  const [editMode, setEditMode] = useState(false)
 
   const cancelHandler = () => {
-    setSelectedDropdown('')
     setShowModal(false)
   }
 
   const confirmHandler = () => {
     // TODO: send requests
     console.log('confirmed')
-    setSelectedDropdown('')
     setShowModal(false)
   }
 
-  const imageConfirmMsg = 'Are you sure you want to delete this image?'
-  const postConfirmMsg = 'Are you sure you want to delete this post?'
   return (
     <>
       <ConfirmModal
         open={showModal}
-        content={
-          selectedDropdown === 'deleteImage' ? imageConfirmMsg : postConfirmMsg
-        }
+        content="Are you sure you want to delete this post"
         confirmButton={<Button negative>Delete</Button>}
         onCancel={cancelHandler}
         onConfirm={confirmHandler}
@@ -60,43 +34,21 @@ const SinglePost = (props) => {
       <Menu attached="top">
         <Menu.Item name="username"></Menu.Item>
         <Menu.Menu position="right">
-          <Dropdown item>
-            <Dropdown.Menu>
-              <Dropdown.Item
-                onClick={() => setSelectedDropdown('editPost')}
-                content="Edit Post"
-              />
-              <Dropdown.Item
-                onClick={() => setSelectedDropdown('deleteImage')}
-                content="Delete Image"
-              />
-              <Dropdown.Item
-                onClick={() => setSelectedDropdown('deletePost')}
-                content="Delete Post"
-              />
-            </Dropdown.Menu>
-          </Dropdown>
+          <FadeButton
+            icon="edit"
+            content="Edit"
+            onClick={() => setEditMode((prev) => !prev)}
+          />
+          <FadeButton
+            icon="trash"
+            negative
+            content="Delete"
+            onClick={() => setShowModal(true)}
+          />
         </Menu.Menu>
       </Menu>
-      <Segment attached="bottom">
-        <Header>Hello world</Header>
-        <Image style={{ width: '250px' }} centered ui src={imageSrc} />
-        <Message>
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit. Accusantium,
-          eveniet corrupti! Eligendi, necessitatibus? Eveniet iure deleniti id
-          amet porro ex odit assumenda rem, non voluptatem debitis quos sequi
-          molestias exercitationem ipsa inventore soluta explicabo sed cumque
-          in? Maxime voluptas quas voluptatum facilis ipsa at tempore labore
-          tenetur, error quasi aspernatur quibusdam necessitatibus enim laborum
-          fuga? Molestiae nobis laudantium enim accusantium debitis repellat
-          quas. Hic temporibus aspernatur delectus, nemo dolor possimus debitis
-          sit animi architecto doloribus, a odit fugiat quae neque ipsa!
-          Consequuntur, inventore quasi. Mollitia excepturi enim, repudiandae
-          sequi odit dolorum aut provident doloremque deserunt. Quo maiores
-          incidunt harum facere.
-        </Message>
-      </Segment>
-
+      {!editMode && <PostContent />}
+      {editMode && <EditPost onCancel={() => setEditMode(false)} />}
       <Button
         as="div"
         labelPosition="right"

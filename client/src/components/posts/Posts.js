@@ -162,7 +162,7 @@ const Posts = (props) => {
         selection
         options={searchOptions}
         allowAdditions
-        icon={<Icon  name="search" />}
+        icon={<Icon name="search" />}
         onAddItem={(event, data) => {
           // need to add a new tag to the list of tags
           setSearchOptions((prev) => [
