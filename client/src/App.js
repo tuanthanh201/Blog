@@ -9,29 +9,35 @@ import NavBar from './components/NavBar'
 import Posts from './components/posts/Posts'
 import Login from './components/auth/Login'
 import Register from './components/auth/Register'
-import './App.css'
 import SinglePost from './components/post/SinglePost'
 import Profile from './components/profile/Profile'
 import CreatePost from './components/createPost/CreatePost'
+import Spinner from './components/utils/Spinner'
+import useUser from './hooks/useUser'
+import './App.css'
 
 function App() {
+  const { loading, user } = useUser()
+
+  if (loading) {
+    return <Spinner />
+  }
+
   return (
-    <>
-      <Router>
-        <Container>
-          <NavBar />
-          <Routes>
-            <Route path="/" element={<Posts />}></Route>
-            <Route path="/login" element={<Login />}></Route>
-            <Route path="/register" element={<Register />}></Route>
-            <Route path="/posts/:postId" element={<SinglePost />}></Route>
-            <Route path="/post/*" element={<CreatePost />}></Route>
-            <Route path="/users/:userId" element={<Profile />}></Route>
-            <Route path="*" element={<Navigate to="/" />}></Route>
-          </Routes>
-        </Container>
-      </Router>
-    </>
+    <Router>
+      <Container>
+        <NavBar user={user} />
+        <Routes>
+          <Route path="/" element={<Posts />}></Route>
+          {!user && <Route path="/login" element={<Login />}></Route>}
+          {!user && <Route path="/register" element={<Register />}></Route>}
+          <Route path="/posts/:postId" element={<SinglePost />}></Route>
+          <Route path="/post/create" element={<CreatePost />}></Route>
+          <Route path="/users/:userId" element={<Profile />}></Route>
+          <Route path="*" element={<Navigate to="/" />}></Route>
+        </Routes>
+      </Container>
+    </Router>
   )
 }
 
