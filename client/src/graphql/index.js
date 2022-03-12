@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client'
 
+//#region Queries
 export const GET_ALL_POSTS = gql`
   query {
     posts: findAllPosts {
@@ -43,6 +44,7 @@ export const GET_POST_BY_ID = gql`
           username
         }
         body
+        createdAt
       }
     }
   }
@@ -72,7 +74,9 @@ export const GET_ME = gql`
     }
   }
 `
+//#endregion
 
+//#region Mutations
 export const LOGIN = gql`
   mutation ($loginInput: LoginInput!) {
     login(loginInput: $loginInput) {
@@ -131,6 +135,36 @@ export const CREATE_POST = gql`
   }
 `
 
+export const CREATE_COMMENT = gql`
+  mutation ($postId: ID!, $body: String!) {
+    post: createComment(postId: $postId, body: $body) {
+      author {
+        id
+        username
+      }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+    }
+  }
+`
+//#endregion
+
 export const cacheUpdateLogin = (cache, payload) => {
   const user = payload?.data?.login
   if (!user) return
@@ -171,4 +205,10 @@ export const cacheUpdateCreatePost = (cache, payload) => {
       posts: [post, ...data.posts],
     },
   })
+}
+
+export const cacheUpdateCreateComment = (cache, payload) => {
+  const post = payload?.data?.post
+  const data = cache.readQuery({ query: GET_POST_BY_ID })
+  console.log(data)
 }

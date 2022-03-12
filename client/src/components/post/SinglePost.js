@@ -34,6 +34,8 @@ const SinglePost = (props) => {
     setShowModal(false)
   }
 
+  if(!data) return null
+
   const { post } = data
   return (
     <>

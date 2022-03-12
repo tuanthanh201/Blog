@@ -48,7 +48,6 @@ class UserService extends DataSource {
   async getMe() {
     try {
       const parsedToken = this.context.req.parsedToken
-      console.log(this.context.req.parsedToken)
       if (!parsedToken) {
         return null
       }
@@ -122,8 +121,6 @@ class UserService extends DataSource {
       this.context.res.cookie('token', token, {
         maxAge: 1000 * 60 * 60 * 3,
         httpOnly: false,
-        // sameSite: 'none',
-        // secure: true,
       })
       return user
     } catch (error) {

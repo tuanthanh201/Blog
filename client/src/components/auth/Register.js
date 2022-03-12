@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useMutation } from '@apollo/client'
 import { Form, Button, Message, Header } from 'semantic-ui-react'
+import nProgress from 'nprogress'
 import useInput from '../../hooks/useInput'
 import validateEmail from '../utils/validateEmail'
 import { REGISTER, cacheUpdateRegister } from '../../graphql'
-import { useEffect, useState } from 'react'
 
 const Register = (props) => {
   const navigate = useNavigate()
@@ -40,22 +41,21 @@ const Register = (props) => {
     if (data) {
       navigate('/')
     }
-  }, [data])
+  }, [data, navigate])
 
   const submitHandler = async (e) => {
     e.preventDefault()
+    nProgress.start()
     const registerInput = {
       username,
       email,
       password,
       bio,
     }
-    console.log(registerInput)
-    const res = await register({ variables: { registerInput } }).catch((e) =>
+    await register({ variables: { registerInput } }).catch((e) =>
       console.error(e)
     )
-    console.log(res)
-    // navigate('/')
+    nProgress.done()
   }
 
   const usernameError = usernameIsInvalid
@@ -69,7 +69,7 @@ const Register = (props) => {
   const hasError = !!error
   return (
     <div className="form-container">
-      <Form error={hasError} loading={loading}>
+      <Form error={hasError}>
         <Header as="h2" textAlign="center" color="teal">
           Register Form
         </Header>
@@ -119,6 +119,7 @@ const Register = (props) => {
         </Message>
         <Button
           fluid
+          loading={loading}
           size="large"
           color="teal"
           type="submit"

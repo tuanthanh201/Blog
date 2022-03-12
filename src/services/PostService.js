@@ -202,11 +202,11 @@ class PostService extends DataSource {
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
       const post = await this.store.postRepo.findById(postId)
-      if (body === undefined || body.trim() === '') {
-        throw new UserInputError('Comment must not be empty')
-      }
       if (!post) {
         throw new Error("Post doesn't exist")
+      }
+      if (body === undefined || body.trim() === '') {
+        throw new UserInputError('Comment must not be empty')
       }
       post.comments.push({ author: user._id, body })
       return await this.store.postRepo.save(post)

@@ -8,8 +8,13 @@ const resolvers = {
     async tags(parent, _, { dataSources }) {
       return await dataSources.tagService.findTagsByTagObjs(parent.tags)
     },
-    image(parent, _, {dataSources}) {
+    image(parent, _, { dataSources }) {
       return dataSources.postService.getImageUrl(parent.image)
+    },
+  },
+  Comment: {
+    async author(parent, _, { dataSources }) {
+      return await dataSources.userService.findUserById(parent.author)
     },
   },
   Query: {

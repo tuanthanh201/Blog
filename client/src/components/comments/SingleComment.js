@@ -1,17 +1,23 @@
-import { Comment } from "semantic-ui-react"
+import { Link } from 'react-router-dom'
+import { Comment } from 'semantic-ui-react'
+import getDate from '../utils/getDate'
 
 const SingleComment = ({ comment }) => {
+  const {
+    author: { username, id: userId },
+    body,
+    createdAt,
+  } = comment
   return (
     <Comment>
       <Comment.Content>
-        <Comment.Author as="a">Matt</Comment.Author>
+        <Comment.Author as={Link} to={`/users/${userId}`}>
+          {username}
+        </Comment.Author>
         <Comment.Metadata>
-          <div>Today at 5:42PM</div>
+          <div>{getDate(createdAt)}</div>
         </Comment.Metadata>
-        <Comment.Text>How artistic!</Comment.Text>
-        <Comment.Actions>
-          <Comment.Action>Reply</Comment.Action>
-        </Comment.Actions>
+        <Comment.Text>{body}</Comment.Text>
       </Comment.Content>
     </Comment>
   )
