@@ -1,15 +1,20 @@
+import { useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import {
-  Form,
-  Button,
-  Message,
-  Header,
-} from 'semantic-ui-react'
+import { useMutation } from '@apollo/client'
+import { Form, Button, Message, Header } from 'semantic-ui-react'
+import nProgress from 'nprogress'
 import useInput from '../../hooks/useInput'
 import validateEmail from '../utils/validateEmail'
+import { LOGIN, cacheUpdateLogin } from '../../graphql'
+import Spinner from '../utils/Spinner'
 
 const Login = (props) => {
   const navigate = useNavigate()
+  const [login, { loading, error, data }] = useMutation(LOGIN, {
+    update: (cache, payload) => {
+      cacheUpdateLogin(cache, payload)
+    },
+  })
   const {
     value: email,
     valueIsValid: emailIsValid,
@@ -25,21 +30,40 @@ const Login = (props) => {
     valueBlurHandler: passwordBlurHandler,
   } = useInput((password) => password.trim().length >= 8)
 
-  const submitHandler = (e) => {
+  useEffect(() => {
+    if (data) {
+      navigate('/')
+    }
+  }, [data, navigate])
+
+  const submitHandler = async (e) => {
     e.preventDefault()
-    console.log({ email, password })
-    navigate('/')
+    nProgress.start()
+    const loginInput = {
+      email,
+      password,
+    }
+    await login({ variables: { loginInput } }).catch((e) => console.error(e))
+    nProgress.done()
   }
 
-  const emailError = emailIsInvalid ? 'Must be a valid email' : undefined
+  // TODO: decide whether to return this or use the provided loading state :?
+  // if (loading) {
+  //   return <Spinner />
+  // }
+
+  const emailError = emailIsInvalid ? 'Email must be a valid' : undefined
   const passwordError = passwordIsInvalid
-    ? 'Must be at least 8 characters long'
+    ? 'Password must be at least 8 characters long'
     : undefined
   const formIsValid = emailIsValid && passwordIsValid
+  const hasError = !!error
   return (
     <div className="form-container">
-      <Form>
-        <Header as='h2' textAlign='center' color='teal'>Login Form</Header>
+      <Form error={hasError}>
+        <Header as="h2" textAlign="center" color="teal">
+          Login Form
+        </Header>
         <Form.Input
           required
           icon="mail"
@@ -68,13 +92,18 @@ const Login = (props) => {
         </Message>
         <Button
           fluid
-          size='large'
-          color='teal'
+          loading={loading}
+          size="large"
+          color="teal"
           type="submit"
           onClick={submitHandler}
           disabled={!formIsValid}>
           Login
         </Button>
+        <Message error>
+          <Message.Header>Failed to login</Message.Header>
+          <p>{error?.message}</p>
+        </Message>
       </Form>
     </div>
   )

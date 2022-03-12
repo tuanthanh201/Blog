@@ -1,10 +1,18 @@
 import { useNavigate, Link } from 'react-router-dom'
+import { useMutation } from '@apollo/client'
 import { Form, Button, Message, Header } from 'semantic-ui-react'
 import useInput from '../../hooks/useInput'
 import validateEmail from '../utils/validateEmail'
+import { REGISTER, cacheUpdateRegister } from '../../graphql'
+import { useEffect, useState } from 'react'
 
 const Register = (props) => {
   const navigate = useNavigate()
+  const [register, { loading, data, error }] = useMutation(REGISTER, {
+    update(cache, payload) {
+      cacheUpdateRegister(cache, payload)
+    },
+  })
   const {
     value: username,
     valueIsValid: usernameIsValid,
@@ -26,22 +34,45 @@ const Register = (props) => {
     valueChangeHandler: passwordChangeHandler,
     valueBlurHandler: passwordBlurHandler,
   } = useInput((password) => password.trim().length >= 8)
+  const [bio, setBio] = useState('')
 
-  const submitHandler = (e) => {
+  useEffect(() => {
+    if (data) {
+      navigate('/')
+    }
+  }, [data])
+
+  const submitHandler = async (e) => {
     e.preventDefault()
-    navigate('/')
+    const registerInput = {
+      username,
+      email,
+      password,
+      bio,
+    }
+    console.log(registerInput)
+    const res = await register({ variables: { registerInput } }).catch((e) =>
+      console.error(e)
+    )
+    console.log(res)
+    // navigate('/')
   }
 
-  const usernameError = usernameIsInvalid ? 'Must not be empty' : undefined
-  const emailError = emailIsInvalid ? 'Must be a valid email' : undefined
+  const usernameError = usernameIsInvalid
+    ? 'Username must not be empty'
+    : undefined
+  const emailError = emailIsInvalid ? 'Email must be a valid' : undefined
   const passwordError = passwordIsInvalid
-    ? 'Must be at least 8 characters long'
+    ? 'Password must be at least 8 characters long'
     : undefined
   const formIsValid = usernameIsValid && emailIsValid && passwordIsValid
+  const hasError = !!error
   return (
     <div className="form-container">
-      <Form>
-        <Header as='h2' textAlign='center' color='teal'>Register Form</Header>
+      <Form error={hasError} loading={loading}>
+        <Header as="h2" textAlign="center" color="teal">
+          Register Form
+        </Header>
         <Form.Input
           required
           icon="user"
@@ -69,13 +100,20 @@ const Register = (props) => {
           icon="lock"
           iconPosition="left"
           label="Password"
+          type="password"
           placeholder=">= 8 characters"
           value={password}
           onChange={passwordChangeHandler}
           onBlur={passwordBlurHandler}
           error={passwordError}
         />
-        <Form.TextArea label="Bio" placeholder="Tell us more about you..." />
+        <Form.TextArea
+          rows={10}
+          label="Bio"
+          value={bio}
+          placeholder="Tell us more about you..."
+          onChange={(e) => setBio(e.target.value)}
+        />
         <Message>
           Already have an account? <Link to="/login">Login</Link>{' '}
         </Message>
@@ -88,6 +126,10 @@ const Register = (props) => {
           disabled={!formIsValid}>
           Register
         </Button>
+        <Message error>
+          <Message.Header>Failed to register</Message.Header>
+          <p>{error?.message}</p>
+        </Message>
       </Form>
     </div>
   )

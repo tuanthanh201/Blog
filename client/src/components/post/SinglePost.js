@@ -1,16 +1,28 @@
 import { useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { useQuery } from '@apollo/client'
 import { Button, Icon, Label, Menu } from 'semantic-ui-react'
+import { GET_POST_BY_ID } from '../../graphql'
 import ConfirmModal from '../utils/ConfirmModal'
-import Comments from './Comments'
+import Comments from '../comments/Comments'
 import EditPost from './EditPost'
 import FadeButton from '../utils/FadeButton'
 import PostContent from './PostContent'
+import Spinner from '../utils/Spinner'
 
 const SinglePost = (props) => {
   const [liked, setLiked] = useState(false)
   const [hideComments, setHideComments] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editMode, setEditMode] = useState(false)
+  const { postId } = useParams()
+  const { loading, data } = useQuery(GET_POST_BY_ID, {
+    variables: { postId },
+  })
+
+  if (loading) {
+    return <Spinner />
+  }
 
   const cancelHandler = () => {
     setShowModal(false)
@@ -22,6 +34,7 @@ const SinglePost = (props) => {
     setShowModal(false)
   }
 
+  const { post } = data
   return (
     <>
       <ConfirmModal
@@ -32,7 +45,7 @@ const SinglePost = (props) => {
         onConfirm={confirmHandler}
       />
       <Menu attached="top">
-        <Menu.Item name="username"></Menu.Item>
+        <Menu.Item>{post.author.username}</Menu.Item>
         <Menu.Menu position="right">
           <FadeButton
             icon="edit"
@@ -47,7 +60,7 @@ const SinglePost = (props) => {
           />
         </Menu.Menu>
       </Menu>
-      {!editMode && <PostContent />}
+      {!editMode && <PostContent post={post} />}
       {editMode && <EditPost onCancel={() => setEditMode(false)} />}
       <Button
         as="div"
@@ -58,7 +71,7 @@ const SinglePost = (props) => {
           Like
         </Button>
         <Label basic color="red" pointing="left">
-          2,048
+          {post.likeCount}
         </Label>
       </Button>
       <Button
@@ -70,11 +83,11 @@ const SinglePost = (props) => {
           Comment
         </Button>
         <Label basic color="blue" pointing="left">
-          2,048
+          {post.commentCount}
         </Label>
       </Button>
 
-      <Comments hideComments={hideComments} />
+      <Comments comments={post.comments} hideComments={hideComments} />
     </>
   )
 }

@@ -1,29 +1,14 @@
-import { useState } from 'react'
-import { Form, Header, Label, Radio } from 'semantic-ui-react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useMutation } from '@apollo/client'
+import { Form, Header } from 'semantic-ui-react'
 import styled from 'styled-components'
+import nProgress from 'nprogress'
+import { cacheUpdateCreatePost, CREATE_POST } from '../../graphql'
 import useInput from '../../hooks/useInput'
+import useTags from '../../hooks/useTags'
 import { toBase64 } from '../utils/imageToBase64'
-
-const options = [
-  { key: 'angular', text: 'Angular', value: 'angular' },
-  { key: 'css', text: 'CSS', value: 'css' },
-  { key: 'design', text: 'Graphic Design', value: 'design' },
-  { key: 'ember', text: 'Ember', value: 'ember' },
-  { key: 'html', text: 'HTML', value: 'html' },
-  { key: 'ia', text: 'Information Architecture', value: 'ia' },
-  { key: 'javascript', text: 'Javascript', value: 'javascript' },
-  { key: 'mech', text: 'Mechanical Engineering', value: 'mech' },
-  { key: 'meteor', text: 'Meteor', value: 'meteor' },
-  { key: 'node', text: 'NodeJS', value: 'node' },
-  { key: 'plumbing', text: 'Plumbing', value: 'plumbing' },
-  { key: 'python', text: 'Python', value: 'python' },
-  { key: 'rails', text: 'Rails', value: 'rails' },
-  { key: 'react', text: 'React', value: 'react' },
-  { key: 'repair', text: 'Kitchen Repair', value: 'repair' },
-  { key: 'ruby', text: 'Ruby', value: 'ruby' },
-  { key: 'ui', text: 'UI Design', value: 'ui' },
-  { key: 'ux', text: 'User Experience', value: 'ux' },
-]
+import Spinner from '../utils/Spinner'
 
 const StyledForm = styled.div`
   width: 55vw;
@@ -34,10 +19,11 @@ const StyledForm = styled.div`
 `
 
 const CreatePost = (props) => {
-  const [searchOptions, setSearchOptions] = useState(options)
+  const navigate = useNavigate()
+  const { loading: tagsLoading, tags } = useTags()
+  const [searchOptions, setSearchOptions] = useState([])
   const [image, setImage] = useState()
   const [selectedTags, setSelectedTags] = useState([])
-  const [showImageField, setShowImageField] = useState(false)
   const {
     value: title,
     valueIsValid: titleIsValid,
@@ -52,15 +38,50 @@ const CreatePost = (props) => {
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
   } = useInput((body) => body.trim() !== '')
+  const [createPost] = useMutation(CREATE_POST)
+
+  useEffect(() => {
+    if (tags) {
+      setSearchOptions(tags)
+    }
+  }, [tags])
 
   const submitHandler = async (e) => {
+    // TODO: add nprogress
     e.preventDefault()
-    console.log({ title, body, selectedTags, image })
+    nProgress.start()
 
-    const imageBase64 = await toBase64(image[0])
-    console.log(imageBase64)
+    let imageBase64 = ''
+    if (image) {
+      imageBase64 = await toBase64(image[0])
+    }
+    const formattedTags = selectedTags.reduce(
+      (prev, current) => prev + ' ' + current,
+      ''
+    )
+    const postInput = {
+      title,
+      body,
+      image: imageBase64,
+      tags: formattedTags,
+    }
+    await createPost({
+      variables: { postInput },
+      update(cache, payload) {
+        cacheUpdateCreatePost(cache, payload)
+      },
+    }).catch((e) => console.error(e))
+    nProgress.done()
+    navigate('/')
   }
 
+  if (tagsLoading) {
+    return <Spinner />
+  }
+
+  const titleError = titleIsInvalid ? 'Title must not be empty' : undefined
+  const bodyError = bodyIsInvalid ? 'Body must not be empty' : undefined
+  const formIsValid = titleIsValid && bodyIsValid
   return (
     <StyledForm>
       <Form>
@@ -74,19 +95,15 @@ const CreatePost = (props) => {
           placeholder="Title...."
           value={title}
           onChange={titleChangeHandler}
+          onBlur={titleBlurHandler}
+          error={titleError}
         />
-        <Form.Radio
-          label="Replace Image"
-          toggle
-          onChange={() => setShowImageField((prev) => !prev)}></Form.Radio>
-        {showImageField && (
-          <Form.Input
-            onChange={(e) => setImage(e.target.files)}
-            fluid
-            label="Image"
-            type="file"
-          />
-        )}
+        <Form.Input
+          onChange={(e) => setImage(e.target.files)}
+          fluid
+          label="Image"
+          type="file"
+        />
         <Form.Dropdown
           fluid
           label="Tags"
@@ -96,19 +113,13 @@ const CreatePost = (props) => {
           selection
           allowAdditions
           placeholder="Search for tags or create new ones..."
-          onAddItem={(event, data) => {
-            // need to add a new tag to the list of tags
-            // key can be tagId
+          onAddItem={(event, data) =>
             setSearchOptions((prev) => [
               ...prev,
               { key: data.value, text: data.value, value: data.value },
             ])
-          }}
-          onChange={(e, data) => {
-            // send a search query
-            console.log(data.value)
-            setSelectedTags(data.value)
-          }}
+          }
+          onChange={(e, data) => setSelectedTags(data.value)}
         />
         <Form.TextArea
           required
@@ -117,15 +128,18 @@ const CreatePost = (props) => {
           placeholder="Post content..."
           value={body}
           onChange={bodyChangeHandler}
+          onBlur={bodyBlurHandler}
+          error={bodyError}
         />
         <Form.Button
           fluid
           color="teal"
           type="submit"
           size="large"
-          onClick={submitHandler}>
-          Submit
-        </Form.Button>
+          disabled={!formIsValid}
+          content="Submit"
+          onClick={submitHandler}
+        />
       </Form>
     </StyledForm>
   )

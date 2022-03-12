@@ -1,5 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './App'
+import ApolloProvider from './Apollo/ApolloProvider'
 
-ReactDOM.render(<App />, document.getElementById('root'))
+ReactDOM.render(
+  <ApolloProvider>
+    <App />
+  </ApolloProvider>,
+  document.getElementById('root')
+)
