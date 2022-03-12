@@ -6,7 +6,6 @@ import nProgress from 'nprogress'
 import useInput from '../../hooks/useInput'
 import validateEmail from '../utils/validateEmail'
 import { LOGIN, cacheUpdateLogin } from '../../graphql'
-import Spinner from '../utils/Spinner'
 
 const Login = (props) => {
   const navigate = useNavigate()

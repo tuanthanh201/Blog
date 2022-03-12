@@ -130,10 +130,9 @@ class PostService extends DataSource {
 
   async editPost(args) {
     try {
-      const { postId, postInput, userId } = args
+      const { postId, postInput } = args
       validatePostInput(postInput)
-      // const user = await checkAuth(this.context.req, this.store.userRepo)
-      const user = await this.store.userRepo.findById(userId)
+      const user = await checkAuth(this.context.req, this.store.userRepo)
       const post = await this.store.postRepo.findById(postId)
 
       if (!post) {
@@ -199,6 +198,7 @@ class PostService extends DataSource {
   }
 
   async createComment({ postId, body }) {
+    console.log({ postId, body })
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
       const post = await this.store.postRepo.findById(postId)
@@ -267,9 +267,13 @@ class PostService extends DataSource {
         throw new Error('Post does not exist')
       }
 
-      if (post.likes.includes(user._id)) {
+      if (
+        post.likes.some((like) => like._id.toString() === user._id.toString())
+      ) {
         // unlike
-        post.likes = post.likes.filter((like) => like !== user._id)
+        post.likes = post.likes.filter(
+          (like) => like._id.toString() !== user._id.toString()
+        )
       } else {
         // like
         post.likes.push(user._id)

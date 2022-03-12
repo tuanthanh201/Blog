@@ -1,27 +1,33 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@apollo/client'
+import { useMutation, useQuery } from '@apollo/client'
 import { Button, Icon, Label, Menu } from 'semantic-ui-react'
-import { GET_POST_BY_ID } from '../../graphql'
+import { GET_POST_BY_ID, LIKE_POST } from '../../graphql'
 import ConfirmModal from '../utils/ConfirmModal'
 import Comments from '../comments/Comments'
 import EditPost from './EditPost'
 import FadeButton from '../utils/FadeButton'
 import PostContent from './PostContent'
 import Spinner from '../utils/Spinner'
+import useUser from '../../hooks/useUser'
 
 const SinglePost = (props) => {
-  const [liked, setLiked] = useState(false)
+  const { postId } = useParams()
+  const { loading: userLoading, user } = useUser()
   const [hideComments, setHideComments] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editMode, setEditMode] = useState(false)
-  const { postId } = useParams()
   const { loading, data } = useQuery(GET_POST_BY_ID, {
     variables: { postId },
   })
+  const [likePost, { loading: likeLoading }] = useMutation(LIKE_POST)
 
-  if (loading) {
+  if (loading || userLoading) {
     return <Spinner />
+  }
+
+  const likeHandler = () => {
+    likePost({ variables: { postId } })
   }
 
   const cancelHandler = () => {
@@ -34,9 +40,10 @@ const SinglePost = (props) => {
     setShowModal(false)
   }
 
-  if(!data) return null
+  if (!data) return null
 
   const { post } = data
+  const likedByUser = post.likes.some((like) => like.id === user?.id)
   return (
     <>
       <ConfirmModal
@@ -63,12 +70,13 @@ const SinglePost = (props) => {
         </Menu.Menu>
       </Menu>
       {!editMode && <PostContent post={post} />}
-      {editMode && <EditPost onCancel={() => setEditMode(false)} />}
+      {editMode && <EditPost post={post} onCancel={() => setEditMode(false)} />}
       <Button
         as="div"
         labelPosition="right"
-        onClick={() => setLiked((prev) => !prev)}>
-        <Button color="red" basic={!liked}>
+        disabled={likeLoading || !user}
+        onClick={likeHandler}>
+        <Button basic={!likedByUser} color="red">
           <Icon name="heart" />
           Like
         </Button>
@@ -89,7 +97,11 @@ const SinglePost = (props) => {
         </Label>
       </Button>
 
-      <Comments comments={post.comments} hideComments={hideComments} />
+      <Comments
+        postId={postId}
+        comments={post.comments}
+        hideComments={hideComments}
+      />
     </>
   )
 }

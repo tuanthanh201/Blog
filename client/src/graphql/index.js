@@ -9,14 +9,27 @@ export const GET_ALL_POSTS = gql`
         id
         username
       }
-      image
       title
       body
+      image
       tags {
         id
         content
       }
-      createdAt
+      likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
     }
   }
 `
@@ -24,6 +37,7 @@ export const GET_ALL_POSTS = gql`
 export const GET_POST_BY_ID = gql`
   query ($postId: ID!) {
     post: findPostById(postId: $postId) {
+      id
       author {
         id
         username
@@ -36,6 +50,9 @@ export const GET_POST_BY_ID = gql`
         content
       }
       likeCount
+      likes {
+        id
+      }
       commentCount
       comments {
         id
@@ -123,6 +140,39 @@ export const CREATE_POST = gql`
         id
         username
       }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+    }
+  }
+`
+
+export const EDIT_POST = gql`
+  mutation ($postId: ID!, $postInput: PostInput!) {
+    editPost(postId: $postId, postInput: $postInput) {
+      id
+      author {
+        id
+        username
+      }
       image
       title
       body
@@ -135,9 +185,10 @@ export const CREATE_POST = gql`
   }
 `
 
-export const CREATE_COMMENT = gql`
-  mutation ($postId: ID!, $body: String!) {
-    post: createComment(postId: $postId, body: $body) {
+export const LIKE_POST = gql`
+  mutation ($postId: ID!) {
+    post: likePost(postId: $postId) {
+      id
       author {
         id
         username
@@ -150,6 +201,42 @@ export const CREATE_COMMENT = gql`
         content
       }
       likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+    }
+  }
+`
+
+export const CREATE_COMMENT = gql`
+  mutation ($postId: ID!, $body: String!) {
+    post: createComment(postId: $postId, body: $body) {
+      id
+      author {
+        id
+        username
+      }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      likes {
+        id
+      }
       commentCount
       comments {
         id
@@ -205,10 +292,4 @@ export const cacheUpdateCreatePost = (cache, payload) => {
       posts: [post, ...data.posts],
     },
   })
-}
-
-export const cacheUpdateCreateComment = (cache, payload) => {
-  const post = payload?.data?.post
-  const data = cache.readQuery({ query: GET_POST_BY_ID })
-  console.log(data)
 }

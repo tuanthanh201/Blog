@@ -1,31 +1,17 @@
-import { useState } from 'react'
-import { Button, Form, Segment } from 'semantic-ui-react'
+import { useEffect, useState } from 'react'
+import { Button, Form, Message, Segment } from 'semantic-ui-react'
+import { useMutation } from '@apollo/client'
+import nProgress from 'nprogress'
 import useInput from '../../hooks/useInput'
+import useTags from '../../hooks/useTags'
 import { toBase64 } from '../utils/imageToBase64'
-
-const options = [
-  { key: 'angular', text: 'Angular', value: 'angular' },
-  { key: 'css', text: 'CSS', value: 'css' },
-  { key: 'design', text: 'Graphic Design', value: 'design' },
-  { key: 'ember', text: 'Ember', value: 'ember' },
-  { key: 'html', text: 'HTML', value: 'html' },
-  { key: 'ia', text: 'Information Architecture', value: 'ia' },
-  { key: 'javascript', text: 'Javascript', value: 'javascript' },
-  { key: 'mech', text: 'Mechanical Engineering', value: 'mech' },
-  { key: 'meteor', text: 'Meteor', value: 'meteor' },
-  { key: 'node', text: 'NodeJS', value: 'node' },
-  { key: 'plumbing', text: 'Plumbing', value: 'plumbing' },
-  { key: 'python', text: 'Python', value: 'python' },
-  { key: 'rails', text: 'Rails', value: 'rails' },
-  { key: 'react', text: 'React', value: 'react' },
-  { key: 'repair', text: 'Kitchen Repair', value: 'repair' },
-  { key: 'ruby', text: 'Ruby', value: 'ruby' },
-  { key: 'ui', text: 'UI Design', value: 'ui' },
-  { key: 'ux', text: 'User Experience', value: 'ux' },
-]
+import Spinner from '../utils/Spinner'
+import { EDIT_POST } from '../../graphql'
 
 const EditPost = (props) => {
-  const [searchOptions, setSearchOptions] = useState(options)
+  const { post } = props
+  const { loading: tagsLoading, tags } = useTags()
+  const [searchOptions, setSearchOptions] = useState([])
   const [image, setImage] = useState()
   const [selectedTags, setSelectedTags] = useState([])
   const [showImageField, setShowImageField] = useState(false)
@@ -36,7 +22,7 @@ const EditPost = (props) => {
     valueChangeHandler: titleChangeHandler,
     valueBlurHandler: titleBlurHandler,
   } = useInput((title) => title.trim() !== '', {
-    value: 'Hello',
+    value: post.title,
     isTouched: false,
   })
   const {
@@ -46,24 +32,53 @@ const EditPost = (props) => {
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
   } = useInput((body) => body.trim() !== '', {
-    value: 'spcascnasncas',
+    value: post.body,
     isTouched: false,
   })
+  const [editPost, { loading, data, error }] = useMutation(EDIT_POST)
+
+  useEffect(() => {
+    if (tags) {
+      setSearchOptions(tags)
+      setSelectedTags(tags)
+    }
+  }, [tags])
 
   const submitHandler = async (e) => {
     e.preventDefault()
-    console.log({ title, body, selectedTags, image })
+    nProgress.start()
+    let imageBase64 = ''
+    if (image) {
+      imageBase64 = await toBase64(image[0])
+    }
+    const formattedTags = selectedTags.reduce(
+      (prev, current) => prev + ' ' + current,
+      ''
+    )
+    const postInput = {
+      title,
+      body,
+      image: imageBase64,
+      tags: formattedTags,
+    }
+    console.log(postInput)
+    await editPost({
+      variables: { postId: post.id, postInput },
+    }).catch((e) => console.error(e))
+    nProgress.done()
+  }
 
-    const imageBase64 = await toBase64(image[0])
-    console.log(imageBase64)
+  if (tagsLoading) {
+    return <Spinner />
   }
 
   const titleError = titleIsInvalid ? 'Title must not be empty' : undefined
   const bodyError = bodyIsInvalid ? 'Body must not be empty' : undefined
   const formIsValid = titleIsValid && bodyIsValid
+  const errorMessage = error ? error.message : 'Something went wrong'
   return (
     <Segment attached="bottom">
-      <Form>
+      <Form success={!!data} error={error}>
         <Form.Input
           fluid
           required
@@ -96,19 +111,15 @@ const EditPost = (props) => {
           allowAdditions
           placeholder="Search for tags or create new ones..."
           onAddItem={(event, data) => {
-            // need to add a new tag to the list of tags
-            // key can be tagId
             setSearchOptions((prev) => [
               ...prev,
               { key: data.value, text: data.value, value: data.value },
             ])
           }}
           onChange={(e, data) => {
-            // send a search query
-            console.log(data.value)
             setSelectedTags(data.value)
           }}
-          defaultValue={['angular']}
+          defaultValue={post.tags.map((tag) => tag.content)}
         />
         <Form.TextArea
           required
@@ -123,10 +134,20 @@ const EditPost = (props) => {
         <Button.Group fluid>
           <Button onClick={props.onCancel}>Cancel</Button>
           <Button.Or />
-          <Button positive disabled={!formIsValid}>
+          <Button
+            loading={loading}
+            positive
+            disabled={!formIsValid}
+            onClick={submitHandler}>
             Save
           </Button>
         </Button.Group>
+        <Message
+          success
+          header="Post edited"
+          content="Your post has been edited"
+        />
+        <Message error header="Failed to edit post" content={errorMessage} />
       </Form>
     </Segment>
   )

@@ -31,7 +31,7 @@ extend type Query {
 extend type Mutation {
   createPost(postInput: PostInput!): Post!
   deleteImage(postId: ID!): Post!
-  editPost(postId: ID!, postInput: PostInput!, userId: ID!): Post!
+  editPost(postId: ID!, postInput: PostInput!): Post!
   deletePost(postId: ID!): String
   createComment(postId: ID!, body: String!): Post!
   editComment(postId: ID!, commentId: ID!, body: String!): Post!

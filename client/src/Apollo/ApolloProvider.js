@@ -15,9 +15,11 @@ const httpLink = createHttpLink({
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   // link: link.concat(httpLink),
-  link: httpLink
+  link: httpLink,
 })
 
-export default function ({ children }) {
+const CustomApolloProvider = ({ children }) => {
   return <ApolloProvider client={client}>{children}</ApolloProvider>
 }
+
+export default CustomApolloProvider

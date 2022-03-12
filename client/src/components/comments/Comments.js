@@ -1,15 +1,13 @@
 import { useMutation } from '@apollo/client'
+import nProgress from 'nprogress'
 import { Button, Comment, Form } from 'semantic-ui-react'
-import { cacheUpdateCreateComment, CREATE_COMMENT } from '../../graphql'
+import { CREATE_COMMENT } from '../../graphql'
 import useInput from '../../hooks/useInput'
+import useUser from '../../hooks/useUser'
 import SingleComment from './SingleComment'
 
 const Comments = ({ postId, comments, hideComments }) => {
-  const [addComment] = useMutation(CREATE_COMMENT, {
-    update(cache, payload) {
-      cacheUpdateCreateComment(cache, payload)
-    },
-  })
+  const [addComment] = useMutation(CREATE_COMMENT, {})
   const {
     value: body,
     valueIsValid: bodyIsValid,
@@ -17,12 +15,15 @@ const Comments = ({ postId, comments, hideComments }) => {
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
   } = useInput((body) => body.trim() !== '')
+  const { user } = useUser()
 
   const submitHandler = async (e) => {
+    nProgress.start()
     e.preventDefault()
-    await addComment({ variables: { postId, body } }).catch((e) =>
-      console.error(e)
-    )
+    await addComment({
+      variables: { postId, body },
+    }).catch((e) => console.error(e))
+    nProgress.done()
   }
 
   const bodyError = bodyIsInvalid ? 'Comment must not be empty' : undefined
@@ -33,23 +34,25 @@ const Comments = ({ postId, comments, hideComments }) => {
         <SingleComment id={comment.id} key={comment.id} comment={comment} />
       ))}
 
-      <Form reply>
-        <Form.TextArea
-          error={bodyError}
-          value={body}
-          onChange={bodyChangeHandler}
-          onBlur={bodyBlurHandler}
-        />
-        <Button
-          disabled={!formIsValid}
-          type="submit"
-          onClick={submitHandler}
-          content="Add Comment"
-          labelPosition="left"
-          icon="edit"
-          primary
-        />
-      </Form>
+      {user && (
+        <Form reply>
+          <Form.TextArea
+            error={bodyError}
+            value={body}
+            onChange={bodyChangeHandler}
+            onBlur={bodyBlurHandler}
+          />
+          <Button
+            disabled={!formIsValid}
+            type="submit"
+            onClick={submitHandler}
+            content="Add Comment"
+            labelPosition="left"
+            icon="edit"
+            primary
+          />
+        </Form>
+      )}
     </Comment.Group>
   )
 }
