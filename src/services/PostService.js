@@ -60,12 +60,10 @@ class PostService extends DataSource {
     }
   }
 
-  async createPost({ postInput, userId }) {
+  async createPost({ postInput }) {
     try {
       let { title, body, image, tags } = postInput
-      // TODO: uncomment this
-      // const user = await checkAuth(this.context.req, this.store.userRepo)
-      const user = await this.store.userRepo.findById(userId)
+      const user = await checkAuth(this.context.req, this.store.userRepo)
       validatePostInput(postInput)
 
       let newPost = {
@@ -85,12 +83,14 @@ class PostService extends DataSource {
         tags = tags.split(' ')
         newPost.tags = []
         for (const content of tags) {
-          let tag = await this.store.tagRepo.findOne({ content })
-          if (!tag) {
-            // if tag doesnt exist then create tag and add it to post
-            tag = await this.store.tagRepo.insert(content)
+          if (content !== '') {
+            let tag = await this.store.tagRepo.findOne({ content })
+            if (!tag) {
+              // if tag doesnt exist then create tag and add it to post
+              tag = await this.store.tagRepo.insert(content)
+            }
+            newPost.tags.push({ tagId: tag._id, content })
           }
-          newPost.tags.push({ tagId: tag._id, content })
         }
       }
       newPost = await this.store.postRepo.insert(newPost)

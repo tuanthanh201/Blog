@@ -29,7 +29,7 @@ extend type Query {
   findPostsByTerm(term: String!): [Post]
 }
 extend type Mutation {
-  createPost(postInput: PostInput!, userId: ID!): Post!
+  createPost(postInput: PostInput!): Post!
   deleteImage(postId: ID!): Post!
   editPost(postId: ID!, postInput: PostInput!, userId: ID!): Post!
   deletePost(postId: ID!): String
