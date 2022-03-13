@@ -57,6 +57,14 @@ const findManyAndSort = async (findOptions, sortOptions) => {
   }
 }
 
+const findAndSortByAggrField = async (aggregations, sortOptions) => {
+  try {
+    return await Post.aggregate(aggregations).sort(sortOptions)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 const findAll = async () => {
   try {
     return await Post.find()
@@ -101,4 +109,5 @@ module.exports = {
   updateById,
   deleteById,
   populate,
+  findAndSortByAggrField,
 }

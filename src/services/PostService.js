@@ -39,21 +39,133 @@ class PostService extends DataSource {
 
   async findAllPosts() {
     try {
-      return await this.store.postRepo.findManyAndSort(
-        {},
-        { createdAt: 'desc' }
-      )
+      return await this.store.postRepo.findManyAndSort({}, { createdAt: -1 })
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findPostsByTerm(term) {
+  async findPostsByAuthor(authorId) {
+    try {
+      return await this.store.postRepo.findManyAndSort(
+        { author: authorId },
+        { _id: -1 }
+      )
+    } catch (error) {}
+  }
+
+  async findPostsByTermSortNewest(term) {
     try {
       const searchOption = { $regex: `${term}`, $options: 'i' }
-      const posts = await this.store.postRepo.findMany({
-        $or: [{ title: searchOption }, { 'tags.content': searchOption }],
-      })
+      const posts = await this.store.postRepo.findManyAndSort(
+        {
+          $or: [{ title: searchOption }, { body: searchOption }],
+        },
+        { _id: -1 }
+      )
+      return posts
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findPostsByTermSortTrending(term) {
+    try {
+      const searchOption = { $regex: `${term}`, $options: 'i' }
+      const aggregations = [
+        {
+          $match: {
+            $or: [{ title: searchOption }, { body: searchOption }],
+          },
+        },
+        {
+          $addFields: {
+            popularity: {
+              $divide: [
+                { $size: '$likes' },
+                {
+                  $pow: [
+                    {
+                      $add: [
+                        {
+                          $dateDiff: {
+                            startDate: '$createdAt',
+                            endDate: new Date(),
+                            unit: 'hour',
+                          },
+                        },
+                        2,
+                      ],
+                    },
+                    1.5,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ]
+      const posts = await this.store.postRepo.findAndSortByAggrField(
+        aggregations,
+        { popularity: -1, _id: -1 }
+      )
+      return posts
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findPostsByTagSortNewest(tag) {
+    try {
+      const searchOption = { $regex: `${tag}`, $options: 'i' }
+      const posts = await this.store.postRepo.findManyAndSort(
+        { 'tags.content': searchOption },
+        { _id: -1 }
+      )
+      return posts
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findPostsByTagSortTrending(tag) {
+    try {
+      const searchOption = { $regex: `${tag}`, $options: 'i' }
+      const aggregations = [
+        {
+          $match: { 'tags.content': searchOption },
+        },
+        {
+          $addFields: {
+            popularity: {
+              $divide: [
+                { $size: '$likes' },
+                {
+                  $pow: [
+                    {
+                      $add: [
+                        {
+                          $dateDiff: {
+                            startDate: '$createdAt',
+                            endDate: new Date(),
+                            unit: 'hour',
+                          },
+                        },
+                        2,
+                      ],
+                    },
+                    1.5,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ]
+      const posts = await this.store.postRepo.findAndSortByAggrField(
+        aggregations,
+        { popularity: -1, _id: -1 }
+      )
       return posts
     } catch (error) {
       throw new Error(error)
@@ -110,24 +222,6 @@ class PostService extends DataSource {
     return null
   }
 
-  async deleteImage({ postId }) {
-    try {
-      // const user = await checkAuth(this.context.req, this.store.userRepo)
-      const post = await this.store.postRepo.findById(postId)
-      // if (!user.posts.includes(postId)) {
-      //   throw new Error("You don't have permission to edit this post")
-      // }
-      if (!post.image) {
-        throw new Error("This post doesn't have an image")
-      }
-      await deleteImages([post.image])
-      post.image = null
-      return await this.store.postRepo.save(post)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
   async editPost(args) {
     try {
       const { postId, postInput } = args
@@ -181,14 +275,18 @@ class PostService extends DataSource {
 
   async deletePost(postId) {
     try {
-      // const user = await checkAuth(this.context.req, this.store.userRepo)
-      // if (!user.posts.includes(postId)) {
-      //   throw new AuthenticationError(
-      //     "You don't have permission to delete this post"
-      //   )
-      // }
+      const user = await checkAuth(this.context.req, this.store.userRepo)
+      const post = await this.store.postRepo.findById(postId)
+      if (!user.posts.some((post) => post._id.toString() === postId)) {
+        throw new AuthenticationError(
+          "You don't have permission to delete this post"
+        )
+      }
+      if (post.image !== '') {
+        await deleteImages([post.image])
+      }
       await this.store.postRepo.deleteById(postId)
-      user.posts.filter((post) => post !== postId)
+      user.posts.filter((post) => post._id.toString() !== postId)
       // remove post from user's posts
       await this.store.userRepo.save(user)
       return 'Post deleted'
@@ -198,7 +296,6 @@ class PostService extends DataSource {
   }
 
   async createComment({ postId, body }) {
-    console.log({ postId, body })
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
       const post = await this.store.postRepo.findById(postId)

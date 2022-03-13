@@ -1,5 +1,6 @@
 const resolvers = {
   Post: {
+    id: (parent) => parent._id || parent.id,
     likeCount: (parent) => parent.likes.length,
     commentCount: (parent) => parent.comments.length,
     async author(parent, _, { dataSources }) {
@@ -13,6 +14,7 @@ const resolvers = {
     },
   },
   Comment: {
+    id: (parent) => parent._id || parent.id,
     async author(parent, _, { dataSources }) {
       return await dataSources.userService.findUserById(parent.author)
     },
@@ -24,16 +26,24 @@ const resolvers = {
     async findAllPosts(_, __, { dataSources }) {
       return await dataSources.postService.findAllPosts()
     },
-    async findPostsByTerm(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTerm(args.term)
+    async findPostsByTermSortNewest(_, args, { dataSources }) {
+      return await dataSources.postService.findPostsByTermSortNewest(args.term)
+    },
+    async findPostsByTermSortTrending(_, args, { dataSources }) {
+      return await dataSources.postService.findPostsByTermSortTrending(
+        args.term
+      )
+    },
+    async findPostsByTagSortNewest(_, args, { dataSources }) {
+      return await dataSources.postService.findPostsByTagSortNewest(args.tag)
+    },
+    async findPostsByTagSortTrending(_, args, { dataSources }) {
+      return await dataSources.postService.findPostsByTagSortTrending(args.tag)
     },
   },
   Mutation: {
     async createPost(_, args, { dataSources }) {
       return await dataSources.postService.createPost(args)
-    },
-    async deleteImage(_, args, { dataSources }) {
-      return await dataSources.postService.deleteImage(args)
     },
     async editPost(_, args, { dataSources }) {
       return await dataSources.postService.editPost(args)

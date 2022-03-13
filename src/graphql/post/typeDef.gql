@@ -26,11 +26,13 @@ type Comment {
 extend type Query {
   findPostById(postId: ID!): Post
   findAllPosts: [Post]
-  findPostsByTerm(term: String!): [Post]
+  findPostsByTermSortNewest(term: String!): [Post]
+  findPostsByTermSortTrending(term: String!): [Post]
+  findPostsByTagSortNewest(tag: String!): [Post]
+  findPostsByTagSortTrending(tag: String!): [Post]
 }
 extend type Mutation {
   createPost(postInput: PostInput!): Post!
-  deleteImage(postId: ID!): Post!
   editPost(postId: ID!, postInput: PostInput!): Post!
   deletePost(postId: ID!): String
   createComment(postId: ID!, body: String!): Post!

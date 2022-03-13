@@ -10,7 +10,6 @@ input LoginInput {
 }
 type User {
   id: ID!
-  # token: String!
   username: String!
   email: String!
   bio: String

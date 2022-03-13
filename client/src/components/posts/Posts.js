@@ -1,45 +1,57 @@
 import { useEffect, useState } from 'react'
 import { useLazyQuery, useQuery } from '@apollo/client'
-import { Form, Item } from 'semantic-ui-react'
+import { Button, Input, Item, Select } from 'semantic-ui-react'
 import Post from './Post'
 import Spinner from '../utils/Spinner'
-import { FIND_POSTS, GET_ALL_POSTS } from '../../graphql'
-import useTags from '../../hooks/useTags'
+import {
+  FIND_POSTS_BY_TERM_NEWEST,
+  FIND_POSTS_BY_TERM_TRENDING,
+  GET_ALL_POSTS,
+} from '../../graphql'
+
+const options = [
+  { key: 'newest', text: 'Newest', value: 'newest' },
+  { key: 'trending', text: 'Trending', value: 'trending' },
+]
 
 const Posts = (props) => {
-  const { loading: tagsLoading, tags } = useTags()
-  const [searchOptions, setSearchOptions] = useState([])
-  const [searchTerms, setSearchTerms] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [sortBy, setSortBy] = useState('newest')
   const [posts, setPosts] = useState([])
   const { loading: allPostsloading, data } = useQuery(GET_ALL_POSTS)
-  const [findPosts, { loading: postsFinding }] = useLazyQuery(FIND_POSTS)
-
-  useEffect(() => {
-    if (tags) {
-      setSearchOptions(tags)
-    }
-  }, [tags])
+  const [findPostsNewest, { loading: findingNewestPosts }] = useLazyQuery(
+    FIND_POSTS_BY_TERM_NEWEST
+  )
+  const [findPostsTrending, { loading: FindingTrendingPosts }] = useLazyQuery(
+    FIND_POSTS_BY_TERM_TRENDING
+  )
 
   useEffect(() => {
     if (data?.posts) {
+      console.log('useEffect got called')
       setPosts(data?.posts)
     }
   }, [data?.posts])
 
   const searchHandler = async () => {
-    const term = searchTerms
-      .reduce((prev, current) => prev + ' ' + current, '')
-      .trim()
-    const { data } = await findPosts({ variables: { term } })
-    console.log(data.posts)
-    if (data.posts) {
-
-      setPosts(data.posts)
+    let postsFound
+    if (sortBy === 'newest') {
+      const { data } = await findPostsNewest({
+        variables: { term: searchTerm },
+      }).catch((e) => console.error(e))
+      postsFound = data.posts
+    } else {
+      const { data } = await findPostsTrending({
+        variables: { term: searchTerm },
+      }).catch((e) => console.error(e))
+      console.log(data)
+      postsFound = data.posts
     }
+    if (postsFound) setPosts(postsFound)
   }
 
   let postsContent = <Spinner />
-  if (!(allPostsloading || tagsLoading || postsFinding)) {
+  if (!(allPostsloading || findingNewestPosts || FindingTrendingPosts)) {
     postsContent = (
       <Item.Group divided>
         {posts.map((post) => (
@@ -60,27 +72,26 @@ const Posts = (props) => {
 
   return (
     <>
-      <Form>
-        <Form.Group>
-          <Form.Dropdown
-            width={16}
-            options={searchOptions}
-            multiple
-            search
-            selection
-            allowAdditions
-            placeholder="Search for tags or create new ones..."
-            onAddItem={(event, data) =>
-              setSearchOptions((prev) => [
-                ...prev,
-                { key: data.value, text: data.value, value: data.value },
-              ])
-            }
-            onChange={(e, data) => setSearchTerms(data.value)}
-          />
-          <Form.Button fluid content="Search" onClick={searchHandler} />
-        </Form.Group>
-      </Form>
+      <Input
+        fluid
+        type="text"
+        placeholder="Search..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        action>
+        <input />
+        <Select
+          options={options}
+          defaultValue="newest"
+          onChange={(event, data) => setSortBy(data.value)}
+        />
+        <Button
+          type="submit"
+          content="Search"
+          color="blue"
+          onClick={searchHandler}
+        />
+      </Input>
       {postsContent}
     </>
   )

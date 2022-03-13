@@ -69,9 +69,111 @@ export const GET_POST_BY_ID = gql`
   }
 `
 
-export const FIND_POSTS = gql`
+export const FIND_POSTS_BY_TERM_NEWEST = gql`
   query ($term: String!) {
-    posts: findPostsByTerm(term: $term) {
+    posts: findPostsByTermSortNewest(term: $term) {
+      id
+      author {
+        id
+        username
+      }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+      createdAt
+    }
+  }
+`
+
+export const FIND_POSTS_BY_TERM_TRENDING = gql`
+  query ($term: String!) {
+    posts: findPostsByTermSortTrending(term: $term) {
+      id
+      author {
+        id
+        username
+      }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+      createdAt
+    }
+  }
+`
+
+export const FIND_POSTS_BY_TAG_NEWEST = gql`
+  query ($term: String!) {
+    posts: findPostsByTagSortNewest(tag: $tag) {
+      id
+      author {
+        id
+        username
+      }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+      createdAt
+    }
+  }
+`
+
+export const FIND_POSTS_BY_TAG_TRENDING = gql`
+  query ($tag: String!) {
+    posts: findPostsByTagSortTrending(tag: $tag) {
       id
       author {
         id
@@ -427,7 +529,3 @@ export const cacheUpdateDeletePost = (cache, payload, postId) => {
     },
   })
 }
-
-// export const cacheUpdateFindPosts = (cache, payload) => {
-//   const
-// }

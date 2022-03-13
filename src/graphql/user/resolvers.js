@@ -1,5 +1,6 @@
 const resolvers = {
   User: {
+    id: (parent) => parent._id || parent.id,
     async posts(parent, args, { dataSources }) {
       return await dataSources.postService.findPostsByAuthor(parent.id)
     },
