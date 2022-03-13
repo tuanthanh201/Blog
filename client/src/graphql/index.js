@@ -30,6 +30,7 @@ export const GET_ALL_POSTS = gql`
         body
         createdAt
       }
+      createdAt
     }
   }
 `
@@ -63,6 +64,41 @@ export const GET_POST_BY_ID = gql`
         body
         createdAt
       }
+      createdAt
+    }
+  }
+`
+
+export const FIND_POSTS = gql`
+  query ($term: String!) {
+    posts: findPostsByTerm(term: $term) {
+      id
+      author {
+        id
+        username
+      }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+      createdAt
     }
   }
 `
@@ -88,6 +124,45 @@ export const GET_ME = gql`
         body
       }
       createdAt
+    }
+  }
+`
+
+export const GET_USER_BY_ID = gql`
+  query ($userId: ID!) {
+    author: findUserById(userId: $userId) {
+      id
+      username
+      bio
+      posts {
+        id
+        author {
+          id
+          username
+        }
+        title
+        body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
+        createdAt
+      }
     }
   }
 `
@@ -132,6 +207,45 @@ export const LOGOUT = gql`
   }
 `
 
+export const UPDATE_BIO = gql`
+  mutation ($userId: ID!, $bio: String!) {
+    author: updateBio(userId: $userId, bio: $bio) {
+      id
+      username
+      bio
+      posts {
+        id
+        author {
+          id
+          username
+        }
+        title
+        body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
+        createdAt
+      }
+    }
+  }
+`
+
 export const CREATE_POST = gql`
   mutation ($postInput: PostInput!) {
     post: createPost(postInput: $postInput) {
@@ -161,6 +275,7 @@ export const CREATE_POST = gql`
         body
         createdAt
       }
+      createdAt
     }
   }
 `
@@ -214,6 +329,7 @@ export const LIKE_POST = gql`
         body
         createdAt
       }
+      createdAt
     }
   }
 `
@@ -247,7 +363,14 @@ export const CREATE_COMMENT = gql`
         body
         createdAt
       }
+      createdAt
     }
+  }
+`
+
+export const DELETE_POST = gql`
+  mutation ($postId: ID!) {
+    deletePost(postId: $postId)
   }
 `
 //#endregion
@@ -293,3 +416,18 @@ export const cacheUpdateCreatePost = (cache, payload) => {
     },
   })
 }
+
+export const cacheUpdateDeletePost = (cache, payload, postId) => {
+  const data = cache.readQuery({ query: GET_ALL_POSTS })
+  const newPosts = data?.posts.filter((post) => post.id !== postId)
+  cache.writeQuery({
+    query: GET_ALL_POSTS,
+    data: {
+      posts: newPosts,
+    },
+  })
+}
+
+// export const cacheUpdateFindPosts = (cache, payload) => {
+//   const
+// }

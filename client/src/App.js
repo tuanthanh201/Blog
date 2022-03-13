@@ -12,7 +12,6 @@ import Register from './components/auth/Register'
 import SinglePost from './components/post/SinglePost'
 import Profile from './components/profile/Profile'
 import CreatePost from './components/createPost/CreatePost'
-import Spinner from './components/utils/Spinner'
 import useUser from './hooks/useUser'
 import './App.css'
 
@@ -20,7 +19,7 @@ function App() {
   const { loading, user } = useUser()
 
   if (loading) {
-    return <Spinner />
+    return null
   }
 
   return (
@@ -31,8 +30,8 @@ function App() {
           <Route path="/" element={<Posts />}></Route>
           {!user && <Route path="/login" element={<Login />}></Route>}
           {!user && <Route path="/register" element={<Register />}></Route>}
+          {user && <Route path="/post/create" element={<CreatePost />}></Route>}
           <Route path="/posts/:postId" element={<SinglePost />}></Route>
-          <Route path="/post/create" element={<CreatePost />}></Route>
           <Route path="/users/:userId" element={<Profile />}></Route>
           <Route path="*" element={<Navigate to="/" />}></Route>
         </Routes>

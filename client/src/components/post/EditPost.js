@@ -10,10 +10,11 @@ import { EDIT_POST } from '../../graphql'
 
 const EditPost = (props) => {
   const { post } = props
+  const postTags = post.tags.map((tag) => tag.content)
   const { loading: tagsLoading, tags } = useTags()
   const [searchOptions, setSearchOptions] = useState([])
   const [image, setImage] = useState()
-  const [selectedTags, setSelectedTags] = useState([])
+  const [selectedTags, setSelectedTags] = useState(postTags)
   const [showImageField, setShowImageField] = useState(false)
   const {
     value: title,
@@ -40,7 +41,6 @@ const EditPost = (props) => {
   useEffect(() => {
     if (tags) {
       setSearchOptions(tags)
-      setSelectedTags(tags)
     }
   }, [tags])
 
@@ -61,7 +61,6 @@ const EditPost = (props) => {
       image: imageBase64,
       tags: formattedTags,
     }
-    console.log(postInput)
     await editPost({
       variables: { postId: post.id, postInput },
     }).catch((e) => console.error(e))
@@ -119,7 +118,7 @@ const EditPost = (props) => {
           onChange={(e, data) => {
             setSelectedTags(data.value)
           }}
-          defaultValue={post.tags.map((tag) => tag.content)}
+          defaultValue={postTags}
         />
         <Form.TextArea
           required

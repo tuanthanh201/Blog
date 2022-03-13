@@ -1,7 +1,7 @@
 const resolvers = {
   User: {
     async posts(parent, args, { dataSources }) {
-      return await dataSources.postService.findPostsByIds(parent.posts)
+      return await dataSources.postService.findPostsByAuthor(parent.id)
     },
     postsCount: (parent) => parent.posts.length,
   },

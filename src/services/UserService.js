@@ -138,11 +138,11 @@ class UserService extends DataSource {
   async updateBio(args) {
     try {
       const { userId, bio } = args
-      // const user = await checkAuth(this.context.req, this.store.userRepo)
+      const user = await checkAuth(this.context.req, this.store.userRepo)
 
-      // if (userId !== user._id) {
-      //   throw new AuthenticationError('You are not allowed to edit this bio')
-      // }
+      if (user._id.toString() !== userId) {
+        throw new AuthenticationError('You are not allowed to edit this bio')
+      }
 
       return await this.store.userRepo.updateById(userId, { bio })
     } catch (error) {
