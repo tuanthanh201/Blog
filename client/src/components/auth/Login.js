@@ -20,6 +20,7 @@ const Login = (props) => {
     valueIsInvalid: emailIsInvalid,
     valueChangeHandler: emailChangeHandler,
     valueBlurHandler: emailBlurHandler,
+    reset: emailReset,
   } = useInput((email) => validateEmail(email))
   const {
     value: password,
@@ -27,6 +28,7 @@ const Login = (props) => {
     valueIsInvalid: passwordIsInvalid,
     valueChangeHandler: passwordChangeHandler,
     valueBlurHandler: passwordBlurHandler,
+    reset: passwordReset,
   } = useInput((password) => password.trim().length >= 8)
 
   useEffect(() => {
@@ -43,6 +45,8 @@ const Login = (props) => {
       password,
     }
     await login({ variables: { loginInput } }).catch((e) => console.error(e))
+    emailReset()
+    passwordReset()
     nProgress.done()
   }
 
