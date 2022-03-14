@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useLazyQuery, useQuery } from '@apollo/client'
 import { Button, Input, Item, Select } from 'semantic-ui-react'
 import Post from './Post'
-import Spinner from '../utils/Spinner'
 import {
   FIND_POSTS_BY_TERM_NEWEST,
   FIND_POSTS_BY_TERM_TRENDING,
@@ -44,13 +43,12 @@ const Posts = (props) => {
       const { data } = await findPostsTrending({
         variables: { term: searchTerm },
       }).catch((e) => console.error(e))
-      console.log(data)
       postsFound = data.posts
     }
     if (postsFound) setPosts(postsFound)
   }
 
-  let postsContent = <Spinner />
+  let postsContent
   if (!(allPostsloading || findingNewestPosts || FindingTrendingPosts)) {
     postsContent = (
       <Item.Group divided>
@@ -64,12 +62,14 @@ const Posts = (props) => {
             image={post.image}
             tags={post.tags}
             createdAt={post.createdAt}
+            searchTerm={searchTerm}
           />
         ))}
       </Item.Group>
     )
   }
 
+  const isLoading = allPostsloading || findingNewestPosts || FindingTrendingPosts
   return (
     <>
       <Input
@@ -87,6 +87,7 @@ const Posts = (props) => {
         />
         <Button
           type="submit"
+          loading={isLoading}
           content="Search"
           color="blue"
           onClick={searchHandler}
