@@ -12,6 +12,7 @@ import Register from './components/auth/Register'
 import SinglePost from './components/post/SinglePost'
 import Profile from './components/profile/Profile'
 import CreatePost from './components/createPost/CreatePost'
+import PostsWithTag from './components/posts/PostsWithTag'
 import useUser from './hooks/useUser'
 import './App.css'
 
@@ -32,6 +33,7 @@ function App() {
           {!user && <Route path="/register" element={<Register />}></Route>}
           {user && <Route path="/post/create" element={<CreatePost />}></Route>}
           <Route path="/posts/:postId" element={<SinglePost />}></Route>
+          <Route path="/posts/tags/:tagContent" element={<PostsWithTag />}></Route>
           <Route path="/users/:userId" element={<Profile />}></Route>
           <Route path="*" element={<Navigate to="/" />}></Route>
         </Routes>

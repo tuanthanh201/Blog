@@ -38,13 +38,26 @@ const CreatePost = (props) => {
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
   } = useInput((body) => body.trim() !== '')
-  const [createPost] = useMutation(CREATE_POST)
+  const [createPost, {loading}] = useMutation(CREATE_POST)
 
   useEffect(() => {
     if (tags) {
       setSearchOptions(tags)
     }
   }, [tags])
+
+  const addTagHandler = (event, data) => {
+    const newTag = data.value.trim()
+    if (newTag !== '') {
+      console.log(searchOptions)
+      const tags = new Set(searchOptions.map((tag) => tag.value))
+      !tags.has(newTag) &&
+        setSearchOptions((prev) => [
+          ...prev,
+          { key: newTag, text: newTag, value: newTag },
+        ])
+    }
+  }
 
   const submitHandler = async (e) => {
     // TODO: add nprogress
@@ -113,13 +126,10 @@ const CreatePost = (props) => {
           selection
           allowAdditions
           placeholder="Search for tags or create new ones..."
-          onAddItem={(event, data) =>
-            setSearchOptions((prev) => [
-              ...prev,
-              { key: data.value, text: data.value, value: data.value },
-            ])
-          }
-          onChange={(e, data) => setSelectedTags(data.value)}
+          onAddItem={addTagHandler}
+          onChange={(e, data) => {
+            setSelectedTags(data.value)
+          }}
         />
         <Form.TextArea
           required
@@ -133,11 +143,12 @@ const CreatePost = (props) => {
         />
         <Form.Button
           fluid
+          loading={loading}
           color="teal"
           type="submit"
           size="large"
-          disabled={!formIsValid}
-          content="Submit"
+          disabled={!formIsValid || loading}
+          content="Post"
           onClick={submitHandler}
         />
       </Form>

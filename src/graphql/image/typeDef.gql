@@ -1,0 +1,14 @@
+type Image {
+  id: ID!
+  url: String!
+  createdAt: String!
+}
+extend type Query {
+  findImageById(imageId: ID!): Image!
+  findImagesByIds(imageIds: [ID]!): [Image]!
+}
+extend type Mutation {
+  insertImage(image: String!): Image!
+  deleteImageById(imageId: ID!): String
+  deleteImagesByIds(imageIds: [ID]!): String
+}

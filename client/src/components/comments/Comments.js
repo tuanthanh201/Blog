@@ -14,6 +14,7 @@ const Comments = ({ postId, comments, hideComments }) => {
     valueIsInvalid: bodyIsInvalid,
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
+    reset: bodyReset,
   } = useInput((body) => body.trim() !== '')
   const { user } = useUser()
 
@@ -23,6 +24,7 @@ const Comments = ({ postId, comments, hideComments }) => {
     await addComment({
       variables: { postId, body },
     }).catch((e) => console.error(e))
+    bodyReset()
     nProgress.done()
   }
 

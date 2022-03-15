@@ -31,13 +31,6 @@ const uploadBase64Image = (base64Image) => {
     ContentEncoding: 'base64',
     ContentType: `image/${type}`,
   }
-  // res = {
-  //   ETag,
-  //   Location, // URL
-  //   key,
-  //   Key,
-  //   Bucket,
-  // }
   return s3.upload(uploadParams).promise()
 }
 

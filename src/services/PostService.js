@@ -1,5 +1,3 @@
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const { DataSource } = require('apollo-datasource')
 const { AuthenticationError, UserInputError } = require('apollo-server')
 
@@ -19,19 +17,6 @@ class PostService extends DataSource {
   async findPostById(postId) {
     try {
       return await this.store.postRepo.findById(postId)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findPostsByIds(postIds) {
-    try {
-      const posts = []
-      for (const postId of postIds) {
-        const post = await this.store.postRepo.findById(postId)
-        posts.push(post)
-      }
-      return posts
     } catch (error) {
       throw new Error(error)
     }
@@ -194,7 +179,8 @@ class PostService extends DataSource {
       if (tags.trim() !== '') {
         tags = tags.split(' ')
         newPost.tags = []
-        for (const content of tags) {
+        for (let content of tags) {
+          content = content.trim()
           if (content !== '') {
             let tag = await this.store.tagRepo.findOne({ content })
             if (!tag) {

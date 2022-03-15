@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
-import { Item, Label } from 'semantic-ui-react'
+import { Button, Item, Label } from 'semantic-ui-react'
 import Highlighter from 'react-highlight-words'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 import getDate from '../utils/getDate'
 import emptyImage from '../utils/getEmptyImageSrc'
 
@@ -17,11 +20,13 @@ const Post = (props) => {
   } = props
   const imageSrc = image ? image : emptyImage
 
+  let content = body.split(' ', 50).join(' ')
+  content = content.length < body.length ? (content += '...') : content
   return (
     <Item>
       <Item.Image src={imageSrc} as={Link} to={`/posts/${postId}`} />
 
-      <Item.Content>
+      <Item.Content verticalAlign="top">
         <Item.Header as={Link} to={`/posts/${postId}`}>
           <Highlighter
             searchWords={[searchTerm]}
@@ -35,16 +40,27 @@ const Post = (props) => {
           </p>
           <p>{getDate(createdAt)}</p>
         </Item.Meta>
-        <Item.Description>
+        {/* <Item.Description>
           <Highlighter
             searchWords={[searchTerm]}
             textToHighlight={body}
             autoEscape
           />
-        </Item.Description>
-        <Item.Extra as={Link} to="/register">
+          <ReactMarkdown
+            children={content}
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+          />
+        </Item.Description> */}
+        <Item.Extra>
           {tags.map((tag) => (
-            <Label key={tag.id} id={tag.id} content={tag.content} />
+            <Label
+              as={Link}
+              to={`/posts/tags/${tag.content}`}
+              key={tag.id}
+              id={tag.id}
+              content={tag.content}
+            />
           ))}
         </Item.Extra>
       </Item.Content>

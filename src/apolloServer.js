@@ -10,11 +10,13 @@ const store = require('./repositories')
 const PostService = require('./services/PostService')
 const TagService = require('./services/TagService')
 const UserService = require('./services/UserService')
+const ImageService = require('./services/ImageService')
 
 const dataSources = () => ({
   postService: new PostService({ store }),
-  tagService: new TagService({store}),
+  tagService: new TagService({ store }),
   userService: new UserService({ store }),
+  imageService: new ImageService({ store }),
 })
 
 const setupApolloServer = async () => {

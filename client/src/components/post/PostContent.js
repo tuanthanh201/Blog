@@ -71,7 +71,7 @@ const PostContent = ({ post }) => {
                 style={{ width: 400, margin: 'auto', display: 'block' }}
               />
             ),
-          }}></ReactMarkdown>
+          }}/>
       </Message>
     </Segment>
   )

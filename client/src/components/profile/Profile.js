@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Menu, Item } from 'semantic-ui-react'
+import { Menu, Item, Button } from 'semantic-ui-react'
 import FadeButton from '../utils/FadeButton'
 import Post from '../posts/Post'
 import EditProfile from './EditProfile'
@@ -23,15 +23,26 @@ const Profile = (props) => {
   }
 
   const { author } = data
+  const isOwner = user?.id === userId
   return (
     <>
       <Menu attached="top">
         <Menu.Item content={author.username}></Menu.Item>
-        {user?.id === userId && (
+        {isOwner && (
           <Menu.Menu position="right">
             <FadeButton
               icon="edit"
-              content="Edit"
+              content="Edit Bio"
+              onClick={() => setEditMode((prev) => !prev)}
+            />
+          </Menu.Menu>
+        )}
+        {!isOwner && (
+          <Menu.Menu position="right">
+            <Button
+              style={{ margin: 0 }}
+              compact
+              content="Subscribe"
               onClick={() => setEditMode((prev) => !prev)}
             />
           </Menu.Menu>

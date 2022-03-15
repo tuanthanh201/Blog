@@ -27,7 +27,6 @@ const Posts = (props) => {
 
   useEffect(() => {
     if (data?.posts) {
-      console.log('useEffect got called')
       setPosts(data?.posts)
     }
   }, [data?.posts])
@@ -69,7 +68,8 @@ const Posts = (props) => {
     )
   }
 
-  const isLoading = allPostsloading || findingNewestPosts || FindingTrendingPosts
+  const isLoading =
+    allPostsloading || findingNewestPosts || FindingTrendingPosts
   return (
     <>
       <Input
@@ -88,6 +88,7 @@ const Posts = (props) => {
         <Button
           type="submit"
           loading={isLoading}
+          disabled={isLoading}
           content="Search"
           color="blue"
           onClick={searchHandler}

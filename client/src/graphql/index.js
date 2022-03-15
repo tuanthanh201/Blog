@@ -138,7 +138,7 @@ export const FIND_POSTS_BY_TERM_TRENDING = gql`
 `
 
 export const FIND_POSTS_BY_TAG_NEWEST = gql`
-  query ($term: String!) {
+  query ($tag: String!) {
     posts: findPostsByTagSortNewest(tag: $tag) {
       id
       author {
@@ -510,11 +510,19 @@ export const cacheUpdateLogout = (cache, payload) => {
 
 export const cacheUpdateCreatePost = (cache, payload) => {
   const post = payload?.data?.post
-  const data = cache.readQuery({ query: GET_ALL_POSTS })
+  const postsData = cache.readQuery({ query: GET_ALL_POSTS })
   cache.writeQuery({
     query: GET_ALL_POSTS,
     data: {
-      posts: [post, ...data.posts],
+      posts: [post, ...postsData.posts],
+    },
+  })
+  const tagsData = cache.readQuery({ query: GET_ALL_TAGS })
+  const tagIds = new Set(tagsData.findAllTags.map((tag) => tag.id))
+  cache.writeQuery({
+    query: GET_ALL_TAGS,
+    data: {
+      findAllTags: [...tagsData.findAllTags, ...post.tags.filter((tag) => !tagIds.has(tag.id))],
     },
   })
 }

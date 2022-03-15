@@ -1,9 +1,5 @@
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const { DataSource } = require('apollo-datasource')
 const { UserInputError } = require('apollo-server')
-
-const { checkAuth } = require('../utils')
 
 class UserService extends DataSource {
   constructor({ store }) {
