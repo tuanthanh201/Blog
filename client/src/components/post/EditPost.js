@@ -22,20 +22,14 @@ const EditPost = (props) => {
     valueIsInvalid: titleIsInvalid,
     valueChangeHandler: titleChangeHandler,
     valueBlurHandler: titleBlurHandler,
-  } = useInput((title) => title.trim() !== '', {
-    value: post.title,
-    isTouched: false,
-  })
+  } = useInput((title) => title.trim() !== '', post.title)
   const {
     value: body,
     valueIsValid: bodyIsValid,
     valueIsInvalid: bodyIsInvalid,
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
-  } = useInput((body) => body.trim() !== '', {
-    value: post.body,
-    isTouched: false,
-  })
+  } = useInput((body) => body.trim() !== '', post.body)
   const [editPost, { loading, data, error }] = useMutation(EDIT_POST)
 
   useEffect(() => {

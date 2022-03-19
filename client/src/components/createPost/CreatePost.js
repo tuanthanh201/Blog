@@ -1,24 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useDropzone } from 'react-dropzone'
 import { useMutation } from '@apollo/client'
 import { v4 as uuidv4 } from 'uuid'
 import { Form, Menu, Segment } from 'semantic-ui-react'
-import styled from 'styled-components'
 import nProgress from 'nprogress'
-import { cacheUpdateCreatePost, CREATE_POST } from '../../graphql'
+import { cacheUpdateCreatePost, CREATE_POST, UPLOAD_IMAGE } from '../../graphql'
 import useInput from '../../hooks/useInput'
 import useTags from '../../hooks/useTags'
 import { toBase64 } from '../utils/imageToBase64'
 import Spinner from '../utils/Spinner'
 import PostContent from '../post/PostContent'
-
-const StyledForm = styled.div`
-  width: 55vw;
-  margin: auto;
-  background-color: aliceblue;
-  border-radius: 10px;
-  padding: 2rem;
-`
 
 const CreatePost = (props) => {
   const navigate = useNavigate()
@@ -27,6 +19,7 @@ const CreatePost = (props) => {
   const [image, setImage] = useState()
   const [active, setActive] = useState('post')
   const [selectedTags, setSelectedTags] = useState([])
+  const [uploadingImages, setUploadingImages] = useState(false)
   const {
     value: title,
     valueIsValid: titleIsValid,
@@ -40,8 +33,30 @@ const CreatePost = (props) => {
     valueIsInvalid: bodyIsInvalid,
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
+    addToInput: addToBody,
   } = useInput((body) => body.trim() !== '')
   const [createPost, { loading }] = useMutation(CREATE_POST)
+  const [uploadImage] = useMutation(UPLOAD_IMAGE)
+
+  const imageUploadHandler = async (selectedImages) => {
+    setUploadingImages(true)
+    for (const image of selectedImages) {
+      const imageBase64 = await toBase64(image)
+      const res = await uploadImage({
+        variables: { image: imageBase64 },
+      }).catch((e) => console.error(e))
+      const markdownImage = `![${image.name}](${res.data.image.url})`
+      addToBody(`${markdownImage}\n`)
+    }
+    setUploadingImages(false)
+  }
+
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: 'image/jpeg,image/jpg,image/png',
+    onDrop: imageUploadHandler,
+    noClick: true,
+  })
+  console.log(body)
 
   useEffect(() => {
     if (tags) {
@@ -149,16 +164,20 @@ const CreatePost = (props) => {
                 setSelectedTags(data.value)
               }}
             />
-            <Form.TextArea
-              required
-              rows={10}
-              label="Body"
-              placeholder="Post content..."
-              value={body}
-              onChange={bodyChangeHandler}
-              onBlur={bodyBlurHandler}
-              error={bodyError}
-            />
+            <div {...getRootProps()}>
+              <input {...getInputProps()} />
+              <Form.TextArea
+                required
+                disabled={uploadingImages}
+                rows={10}
+                label="Body"
+                placeholder="Post content..."
+                value={body}
+                onChange={bodyChangeHandler}
+                onBlur={bodyBlurHandler}
+                error={bodyError}
+              />
+            </div>
             <Form.Button
               fluid
               loading={loading}

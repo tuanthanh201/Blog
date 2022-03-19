@@ -475,6 +475,15 @@ export const DELETE_POST = gql`
     deletePost(postId: $postId)
   }
 `
+
+export const UPLOAD_IMAGE = gql`
+  mutation ($image: String!) {
+    image: insertImage(image: $image) {
+      id
+      url
+    }
+  }
+`
 //#endregion
 
 export const cacheUpdateLogin = (cache, payload) => {

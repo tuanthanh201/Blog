@@ -7,31 +7,6 @@ import emptyImage from '../utils/getEmptyImageSrc'
 const PostContent = ({ post }) => {
   const { title, body, tags, image } = post
   const imageSrc = image ? image : emptyImage
-  const st = `![turkey](https://d3sjlfriau3aek.cloudfront.net/3b08336b-d566-4a3a-bc59-0834d6c2c328) \n
-  <img src='https://d3sjlfriau3aek.cloudfront.net/3b08336b-d566-4a3a-bc59-0834d6c2c328'> \n
-  Heading level 1
-  ===============
-  *This text* is italic
-
-  **This text** is bold
-
-  ascijmas**heheh**acsa
-
-  ~This text~ is strikethrough
-
-  > #### The quarterly results look great!
-
-  >
-
-  > - Revenue was off the chart.
-
-  > - Profits were higher than ever.
-
-  >
-
-  >  *Everything* is going according to **plan**.
-
-  `
 
   return (
     <Segment attached="bottom">
@@ -45,9 +20,9 @@ const PostContent = ({ post }) => {
           ))}
         </Item.Extra>
       </Item>
-      <Message>{body}
+      <Message>
         <ReactMarkdown
-          children={st}
+          children={body}
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
           components={{
@@ -59,7 +34,8 @@ const PostContent = ({ post }) => {
                 style={{ width: 400, margin: 'auto', display: 'block' }}
               />
             ),
-          }}/>
+          }}
+        />
       </Message>
     </Segment>
   )
