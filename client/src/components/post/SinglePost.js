@@ -16,7 +16,7 @@ import FadeButton from '../utils/FadeButton'
 import PostContent from './PostContent'
 import Spinner from '../utils/Spinner'
 import useUser from '../../hooks/useUser'
-import PostNotFound from './PostNotFound'
+import NotFound from '../utils/NotFound'
 
 const SinglePost = (props) => {
   const { postId } = useParams()
@@ -56,7 +56,12 @@ const SinglePost = (props) => {
   }
 
   if (!data || !data.post) {
-    return <PostNotFound />
+    return (
+      <NotFound
+        header="No post found"
+        message="This post doesn't exist or has been deleted."
+      />
+    )
   }
 
   const { post } = data

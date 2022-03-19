@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Button, Item, Label } from 'semantic-ui-react'
+import { Item, Label } from 'semantic-ui-react'
 import Highlighter from 'react-highlight-words'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import rehypeRaw from 'rehype-raw'
 import getDate from '../utils/getDate'
 import emptyImage from '../utils/getEmptyImageSrc'
 
@@ -11,7 +8,7 @@ const Post = (props) => {
   const {
     id: postId,
     title,
-    body,
+    // body,
     author: { id: userId, username },
     image,
     tags,
@@ -20,8 +17,8 @@ const Post = (props) => {
   } = props
   const imageSrc = image ? image : emptyImage
 
-  let content = body.split(' ', 50).join(' ')
-  content = content.length < body.length ? (content += '...') : content
+  // let content = body.split(' ', 50).join(' ')
+  // content = content.length < body.length ? (content += '...') : content
   return (
     <Item>
       <Item.Image src={imageSrc} as={Link} to={`/posts/${postId}`} />

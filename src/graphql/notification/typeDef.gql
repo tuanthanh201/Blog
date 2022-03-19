@@ -1,0 +1,12 @@
+type Notification {
+  user: User!
+  author: User!
+  post: Post!
+  createdAt: String!
+}
+extend type Query {
+  findNotificationToUser: [Notification]!
+}
+extend type Mutation {
+  deleteNotification(notificationId: ID!): String
+}

@@ -8,6 +8,10 @@ export const GET_ALL_POSTS = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -42,6 +46,10 @@ export const GET_POST_BY_ID = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -76,6 +84,10 @@ export const FIND_POSTS_BY_TERM_NEWEST = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -110,6 +122,10 @@ export const FIND_POSTS_BY_TERM_TRENDING = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -144,6 +160,10 @@ export const FIND_POSTS_BY_TAG_NEWEST = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -178,6 +198,10 @@ export const FIND_POSTS_BY_TAG_TRENDING = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -236,6 +260,10 @@ export const GET_USER_BY_ID = gql`
       id
       username
       bio
+      subscribers {
+        id
+        username
+      }
       posts {
         id
         author {
@@ -355,6 +383,10 @@ export const CREATE_POST = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -409,6 +441,10 @@ export const LIKE_POST = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -443,6 +479,10 @@ export const CREATE_COMMENT = gql`
       author {
         id
         username
+        subscribers {
+          id
+          username
+        }
       }
       title
       body
@@ -475,7 +515,118 @@ export const DELETE_POST = gql`
     deletePost(postId: $postId)
   }
 `
+
+export const SUBSCRIBE = gql`
+  mutation ($userId: ID!) {
+    author: subscribe(userId: $userId) {
+      id
+      username
+      bio
+      subscribers {
+        id
+        username
+      }
+      posts {
+        id
+        author {
+          id
+          username
+        }
+        title
+        body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
+        createdAt
+      }
+    }
+  }
+`
 //#endregion
+
+export const POST_CREATED = gql`
+  subscription {
+    post: postCreated {
+      id
+      author {
+        id
+        username
+        subscribers {
+          id
+          username
+        }
+      }
+      title
+      body
+      image
+      tags {
+        id
+        content
+      }
+      likeCount
+      likes {
+        id
+      }
+      commentCount
+      comments {
+        id
+        author {
+          id
+          username
+        }
+        body
+        createdAt
+      }
+      createdAt
+    }
+  }
+`
+
+export const POSTS_FETCHED = gql`
+  subscription {
+    postsFetched {
+      title
+      author {
+        username
+      }
+    }
+  }
+`
+
+export const NEW_NOTIFICATION = gql`
+  subscription ($userId: ID!) {
+    newNotification(userId: $userId) {
+      user {
+        id
+        username
+      }
+      author {
+        id
+        username
+      }
+      post {
+        id
+        title
+      }
+    }
+  }
+`
 
 export const cacheUpdateLogin = (cache, payload) => {
   const user = payload?.data?.login
@@ -522,7 +673,10 @@ export const cacheUpdateCreatePost = (cache, payload) => {
   cache.writeQuery({
     query: GET_ALL_TAGS,
     data: {
-      findAllTags: [...tagsData.findAllTags, ...post.tags.filter((tag) => !tagIds.has(tag.id))],
+      findAllTags: [
+        ...tagsData.findAllTags,
+        ...post.tags.filter((tag) => !tagIds.has(tag.id)),
+      ],
     },
   })
 }

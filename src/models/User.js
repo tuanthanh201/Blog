@@ -32,6 +32,22 @@ const UserSchema = new Schema({
       },
     },
   ],
+  subscribers: [
+    {
+      subscriber: {
+        type: Schema.Types.ObjectId,
+        red: 'user',
+      },
+    },
+  ],
+  notifications: [
+    {
+      notification: {
+        type: Schema.Types.ObjectId,
+        ref: 'notification',
+      },
+    },
+  ],
 })
 
 module.exports = User = mongoose.model('user', UserSchema)

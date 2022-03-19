@@ -8,6 +8,7 @@ const mergeResolversAndTypeDefs = () => {
     `
       type Query
       type Mutation
+      type Subscription
     `,
   ]
   const resolversFileName = 'resolvers.js'

@@ -7,13 +7,17 @@ import EditProfile from './EditProfile'
 import ProfileContent from './ProfileContent'
 import useUser from '../../hooks/useUser'
 import Spinner from '../utils/Spinner'
-import { useQuery } from '@apollo/client'
-import { GET_USER_BY_ID } from '../../graphql'
+import NotFound from '../utils/NotFound'
+import { useMutation, useQuery } from '@apollo/client'
+import { GET_USER_BY_ID, SUBSCRIBE } from '../../graphql'
 
 const Profile = (props) => {
   const { userId } = useParams()
   const [editMode, setEditMode] = useState(false)
   const { loading: authorLoading, data } = useQuery(GET_USER_BY_ID, {
+    variables: { userId },
+  })
+  const [subscribe, { loading: subscribing }] = useMutation(SUBSCRIBE, {
     variables: { userId },
   })
   const { loading: userLoading, user } = useUser()
@@ -23,7 +27,16 @@ const Profile = (props) => {
   }
 
   const { author } = data
+  if (!author) {
+    return (
+      <NotFound header="User not found" message="This user doesn't exist" />
+    )
+  }
+
   const isOwner = user?.id === userId
+  const subscribed = author.subscribers?.some(
+    (subscriber) => subscriber.id === user?.id
+  )
   return (
     <>
       <Menu attached="top">
@@ -37,13 +50,16 @@ const Profile = (props) => {
             />
           </Menu.Menu>
         )}
-        {!isOwner && (
+        {!isOwner && user && (
           <Menu.Menu position="right">
             <Button
+              loading={subscribing}
               style={{ margin: 0 }}
+              color="blue"
+              basic={!subscribed}
               compact
-              content="Subscribe"
-              onClick={() => setEditMode((prev) => !prev)}
+              content={subscribed ? 'Subscribed' : 'Subscribe'}
+              onClick={subscribe}
             />
           </Menu.Menu>
         )}

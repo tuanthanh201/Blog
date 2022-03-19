@@ -3,6 +3,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const { DataSource } = require('apollo-datasource')
 const { AuthenticationError, UserInputError } = require('apollo-server')
 const bcrypt = require('bcryptjs')
+const { withFilter } = require('graphql-subscriptions')
 const jwt = require('jsonwebtoken')
 
 const { checkAuth, validateUserInput } = require('../utils')
@@ -37,6 +38,14 @@ class UserService extends DataSource {
     }
   }
 
+  async FindUsersByIds(userIds) {
+    try {
+      return await this.store.userRepo.findMany({ _id: { $in: userIds } })
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
   async findAllUsers() {
     try {
       return await this.store.userRepo.findAll()
@@ -61,10 +70,6 @@ class UserService extends DataSource {
     try {
       validateUserInput(registerInput)
       let { username, email, password } = registerInput
-
-      // can use this so that we don't need to search twice, but the error
-      //  will be more generic
-      // const user = await User.find().or([{ username }, { email }])
 
       // check email
       const emailExisted = !!(await this.store.userRepo.findOne({ email }))
@@ -148,6 +153,37 @@ class UserService extends DataSource {
     } catch (error) {
       throw new Error(error)
     }
+  }
+
+  async subscribe(userId) {
+    try {
+      const user = await checkAuth(this.context.req, this.store.userRepo)
+      const author = await this.store.userRepo.findById(userId)
+
+      if (!author) {
+        throw new Error('Author does not exist')
+      }
+
+      // check if already subscribed to author
+      if (
+        author.subscribers.some(
+          (subscriber) => subscriber._id.toString() === user._id.toString()
+        )
+      ) {
+        author.subscribers = author.subscribers.filter(
+          (subscribe) => subscribe._id.toString() !== user._id.toString()
+        )
+      } else {
+        author.subscribers.push(user._id)
+      }
+      return await this.store.userRepo.save(author)
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async newNotification(context) {
+    return context.pubsub.asyncIterator('NEW_NOTIFICATION')
   }
 }
 

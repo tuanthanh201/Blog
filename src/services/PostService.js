@@ -194,6 +194,26 @@ class PostService extends DataSource {
       newPost = await this.store.postRepo.insert(newPost)
       // save post to user
       user.posts.push(newPost._id)
+      // this.context.pubsub.publish('POST_CREATED', { postCreated: newPost })
+
+      // create a notification for each subscriber
+      for (const subscriberId of user.subscribers) {
+        const subscriber = await this.store.userRepo.findById(subscriberId)
+        if (!subscriber) {
+          throw new Error('Subscriber does not exist')
+        }
+        const notification = await this.store.notificationRepo.insert({
+          user: subscriberId,
+          author: user._id,
+          post: newPost._id,
+        })
+        subscriber.notifications.unshift(notification._id)
+        await this.store.userRepo.save(subscriber)
+        this.context.pubsub.publish('NEW_NOTIFICATION', {
+          newNotification: notification,
+        })
+        console.log('published')
+      }
       await this.store.userRepo.save(user)
       return newPost
     } catch (error) {
@@ -263,6 +283,9 @@ class PostService extends DataSource {
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
       const post = await this.store.postRepo.findById(postId)
+      if (!post) {
+        throw new Error('Post does not exist')
+      }
       if (!user.posts.some((post) => post._id.toString() === postId)) {
         throw new AuthenticationError(
           "You don't have permission to delete this post"
@@ -272,7 +295,7 @@ class PostService extends DataSource {
         await deleteImages([post.image])
       }
       await this.store.postRepo.deleteById(postId)
-      user.posts.filter((post) => post._id.toString() !== postId)
+      user.posts = user.posts.filter((post) => post._id.toString() !== postId)
       // remove post from user's posts
       await this.store.userRepo.save(user)
       return 'Post deleted'
@@ -364,6 +387,21 @@ class PostService extends DataSource {
       return await this.store.postRepo.save(post)
     } catch (error) {
       throw new Error(error)
+    }
+  }
+
+  async newPostListening(context) {
+    return context.pubsub.asyncIterator('POST_CREATED')
+  }
+
+  async newPostFilter(payload, variables) {
+    const user = await checkAuth(this.context.req, this.store.userRepo)
+    if (user) {
+      console.log(payload)
+      console.log(variables)
+      return true
+    } else {
+      return false
     }
   }
 }
