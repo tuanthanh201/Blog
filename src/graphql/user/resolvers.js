@@ -21,6 +21,9 @@ const resolvers = {
     async updateBio(_, args, { dataSources }) {
       return await dataSources.userService.updateBio(args)
     },
+    async subscribe(_, args, { dataSources }) {
+      return await dataSources.userService.subscribe(args.userId)
+    },
     async register(_, args, { dataSources }) {
       return await dataSources.userService.register(args)
     },

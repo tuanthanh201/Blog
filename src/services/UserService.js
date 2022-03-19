@@ -37,6 +37,14 @@ class UserService extends DataSource {
     }
   }
 
+  async FindUsersByIds(userIds) {
+    try {
+      return await this.store.userRepo.findMany({ _id: { $in: userIds } })
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
   async findAllUsers() {
     try {
       return await this.store.userRepo.findAll()
@@ -61,10 +69,6 @@ class UserService extends DataSource {
     try {
       validateUserInput(registerInput)
       let { username, email, password } = registerInput
-
-      // can use this so that we don't need to search twice, but the error
-      //  will be more generic
-      // const user = await User.find().or([{ username }, { email }])
 
       // check email
       const emailExisted = !!(await this.store.userRepo.findOne({ email }))

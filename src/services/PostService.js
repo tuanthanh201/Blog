@@ -263,6 +263,9 @@ class PostService extends DataSource {
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
       const post = await this.store.postRepo.findById(postId)
+      if (!post) {
+        throw new Error('Post does not exist')
+      }
       if (!user.posts.some((post) => post._id.toString() === postId)) {
         throw new AuthenticationError(
           "You don't have permission to delete this post"
@@ -272,7 +275,7 @@ class PostService extends DataSource {
         await deleteImages([post.image])
       }
       await this.store.postRepo.deleteById(postId)
-      user.posts.filter((post) => post._id.toString() !== postId)
+      user.posts = user.posts.filter((post) => post._id.toString() !== postId)
       // remove post from user's posts
       await this.store.userRepo.save(user)
       return 'Post deleted'

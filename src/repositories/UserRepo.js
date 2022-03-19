@@ -42,6 +42,14 @@ const findOne = async (cond) => {
   }
 }
 
+const findMany = async(cond)=> {
+  try {
+    return await User.find(cond)
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 const findAll = async () => {
   try {
     return await User.find()
@@ -63,6 +71,7 @@ module.exports = {
   insertMany,
   save,
   findById,
+  findMany,
   findOne,
   findAll,
   updateById,

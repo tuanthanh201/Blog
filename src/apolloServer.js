@@ -20,16 +20,6 @@ const dataSources = () => ({
 })
 
 const setupApolloServer = async () => {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    dataSources,
-    context: ({ req, res }) => ({
-      req,
-      res,
-    }),
-  })
-
   const app = express()
 
   app.use(cookieParser())
@@ -48,6 +38,16 @@ const setupApolloServer = async () => {
       })
     }
     next()
+  })
+
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    dataSources,
+    context: ({ req, res }) => ({
+      req,
+      res,
+    }),
   })
 
   await server.start()

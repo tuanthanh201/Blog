@@ -522,7 +522,10 @@ export const cacheUpdateCreatePost = (cache, payload) => {
   cache.writeQuery({
     query: GET_ALL_TAGS,
     data: {
-      findAllTags: [...tagsData.findAllTags, ...post.tags.filter((tag) => !tagIds.has(tag.id))],
+      findAllTags: [
+        ...tagsData.findAllTags,
+        ...post.tags.filter((tag) => !tagIds.has(tag.id)),
+      ],
     },
   })
 }

@@ -4,6 +4,11 @@ import { Menu } from 'semantic-ui-react'
 import nProgress from 'nprogress'
 import { LOGOUT, cacheUpdateLogout } from '../graphql'
 
+const options = [
+  { key: 'newest', text: 'Newest', value: 'newest' },
+  { key: 'trending', text: 'Trending', value: 'trending' },
+]
+
 const NavBar = ({ user }) => {
   const { pathname } = useLocation()
   const [logout] = useMutation(LOGOUT, {

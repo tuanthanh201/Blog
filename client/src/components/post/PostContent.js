@@ -4,18 +4,6 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import emptyImage from '../utils/getEmptyImageSrc'
 
-const BlogImage = (props) => {
-  return <img {...props} style={{ maxWidth: '100%' }} />
-}
-
-const renderers = {
-  //This custom renderer changes how images are rendered
-  //we use it to constrain the max width of an image to its container
-  image: ({ alt, src, title }) => (
-    <img alt={alt} src={src} title={title} style={{ maxWidth: 475 }} />
-  ),
-}
-
 const PostContent = ({ post }) => {
   const { title, body, tags, image } = post
   const imageSrc = image ? image : emptyImage
@@ -57,7 +45,7 @@ const PostContent = ({ post }) => {
           ))}
         </Item.Extra>
       </Item>
-      <Message>
+      <Message>{body}
         <ReactMarkdown
           children={st}
           remarkPlugins={[remarkGfm]}

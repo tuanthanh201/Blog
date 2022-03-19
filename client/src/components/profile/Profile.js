@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Menu, Item, Button } from 'semantic-ui-react'
+import { Menu, Item } from 'semantic-ui-react'
 import FadeButton from '../utils/FadeButton'
 import Post from '../posts/Post'
 import EditProfile from './EditProfile'
 import ProfileContent from './ProfileContent'
 import useUser from '../../hooks/useUser'
 import Spinner from '../utils/Spinner'
-import { useQuery } from '@apollo/client'
+import NotFound from '../utils/NotFound'
+import {useQuery } from '@apollo/client'
 import { GET_USER_BY_ID } from '../../graphql'
 
 const Profile = (props) => {
@@ -23,6 +24,12 @@ const Profile = (props) => {
   }
 
   const { author } = data
+  if (!author) {
+    return (
+      <NotFound header="User not found" message="This user doesn't exist" />
+    )
+  }
+
   const isOwner = user?.id === userId
   return (
     <>
@@ -33,16 +40,6 @@ const Profile = (props) => {
             <FadeButton
               icon="edit"
               content="Edit Bio"
-              onClick={() => setEditMode((prev) => !prev)}
-            />
-          </Menu.Menu>
-        )}
-        {!isOwner && (
-          <Menu.Menu position="right">
-            <Button
-              style={{ margin: 0 }}
-              compact
-              content="Subscribe"
               onClick={() => setEditMode((prev) => !prev)}
             />
           </Menu.Menu>

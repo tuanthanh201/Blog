@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@apollo/client'
-import { Form, Header } from 'semantic-ui-react'
+import { v4 as uuidv4 } from 'uuid'
+import { Form, Menu, Segment } from 'semantic-ui-react'
 import styled from 'styled-components'
 import nProgress from 'nprogress'
 import { cacheUpdateCreatePost, CREATE_POST } from '../../graphql'
@@ -9,6 +10,7 @@ import useInput from '../../hooks/useInput'
 import useTags from '../../hooks/useTags'
 import { toBase64 } from '../utils/imageToBase64'
 import Spinner from '../utils/Spinner'
+import PostContent from '../post/PostContent'
 
 const StyledForm = styled.div`
   width: 55vw;
@@ -23,6 +25,7 @@ const CreatePost = (props) => {
   const { loading: tagsLoading, tags } = useTags()
   const [searchOptions, setSearchOptions] = useState([])
   const [image, setImage] = useState()
+  const [active, setActive] = useState('post')
   const [selectedTags, setSelectedTags] = useState([])
   const {
     value: title,
@@ -38,7 +41,7 @@ const CreatePost = (props) => {
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
   } = useInput((body) => body.trim() !== '')
-  const [createPost, {loading}] = useMutation(CREATE_POST)
+  const [createPost, { loading }] = useMutation(CREATE_POST)
 
   useEffect(() => {
     if (tags) {
@@ -46,10 +49,13 @@ const CreatePost = (props) => {
     }
   }, [tags])
 
+  const labelClickHandler = (e, { name }) => {
+    setActive(name)
+  }
+
   const addTagHandler = (event, data) => {
     const newTag = data.value.trim()
     if (newTag !== '') {
-      console.log(searchOptions)
       const tags = new Set(searchOptions.map((tag) => tag.value))
       !tags.has(newTag) &&
         setSearchOptions((prev) => [
@@ -60,7 +66,6 @@ const CreatePost = (props) => {
   }
 
   const submitHandler = async (e) => {
-    // TODO: add nprogress
     e.preventDefault()
     nProgress.start()
 
@@ -96,63 +101,88 @@ const CreatePost = (props) => {
   const bodyError = bodyIsInvalid ? 'Body must not be empty' : undefined
   const formIsValid = titleIsValid && bodyIsValid
   return (
-    <StyledForm>
-      <Form>
-        <Header as="h2" textAlign="center" color="teal">
-          Create Post
-        </Header>
-        <Form.Input
-          fluid
-          required
-          label="Title"
-          placeholder="Title...."
-          value={title}
-          onChange={titleChangeHandler}
-          onBlur={titleBlurHandler}
-          error={titleError}
+    <>
+      <Menu attached="top" tabular>
+        <Menu.Item
+          name="post"
+          active={active === 'post'}
+          onClick={labelClickHandler}
         />
-        <Form.Input
-          onChange={(e) => setImage(e.target.files)}
-          fluid
-          label="Image"
-          type="file"
+        <Menu.Item
+          name="preview"
+          active={active === 'preview'}
+          onClick={labelClickHandler}
         />
-        <Form.Dropdown
-          fluid
-          label="Tags"
-          options={searchOptions}
-          multiple
-          search
-          selection
-          allowAdditions
-          placeholder="Search for tags or create new ones..."
-          onAddItem={addTagHandler}
-          onChange={(e, data) => {
-            setSelectedTags(data.value)
+      </Menu>
+
+      {active === 'post' && (
+        <Segment attached="bottom">
+          <Form>
+            <Form.Input
+              fluid
+              required
+              label="Title"
+              placeholder="Title...."
+              value={title}
+              onChange={titleChangeHandler}
+              onBlur={titleBlurHandler}
+              error={titleError}
+            />
+            <Form.Input
+              onChange={(e) => setImage(e.target.files)}
+              fluid
+              label="Image"
+              type="file"
+            />
+            <Form.Dropdown
+              fluid
+              label="Tags"
+              options={searchOptions}
+              multiple
+              search
+              selection
+              defaultValue={selectedTags}
+              allowAdditions
+              placeholder="Search for tags or create new ones..."
+              onAddItem={addTagHandler}
+              onChange={(e, data) => {
+                setSelectedTags(data.value)
+              }}
+            />
+            <Form.TextArea
+              required
+              rows={10}
+              label="Body"
+              placeholder="Post content..."
+              value={body}
+              onChange={bodyChangeHandler}
+              onBlur={bodyBlurHandler}
+              error={bodyError}
+            />
+            <Form.Button
+              fluid
+              loading={loading}
+              color="teal"
+              type="submit"
+              size="large"
+              disabled={!formIsValid || loading}
+              content="Post"
+              onClick={submitHandler}
+            />
+          </Form>
+        </Segment>
+      )}
+
+      {active === 'preview' && (
+        <PostContent
+          post={{
+            title,
+            body,
+            tags: selectedTags.map((tag) => ({ id: uuidv4(), content: tag })),
           }}
         />
-        <Form.TextArea
-          required
-          rows={10}
-          label="Body"
-          placeholder="Post content..."
-          value={body}
-          onChange={bodyChangeHandler}
-          onBlur={bodyBlurHandler}
-          error={bodyError}
-        />
-        <Form.Button
-          fluid
-          loading={loading}
-          color="teal"
-          type="submit"
-          size="large"
-          disabled={!formIsValid || loading}
-          content="Post"
-          onClick={submitHandler}
-        />
-      </Form>
-    </StyledForm>
+      )}
+    </>
   )
 }
 
