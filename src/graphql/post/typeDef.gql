@@ -40,7 +40,3 @@ extend type Mutation {
   deleteComment(postId: ID!, commentId: ID!): Post!
   likePost(postId: ID!): Post!
 }
-extend type Subscription {
-  postsFetched: [Post]
-  postCreated: Post
-}

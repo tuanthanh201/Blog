@@ -7,7 +7,6 @@ import {
   FIND_POSTS_BY_TERM_TRENDING,
   GET_ALL_POSTS,
 } from '../../graphql'
-import Something from './Something'
 
 const options = [
   { key: 'newest', text: 'Newest', value: 'newest' },
@@ -26,6 +25,7 @@ const Posts = (props) => {
     FIND_POSTS_BY_TERM_TRENDING
   )
 
+  console.log(data)
   useEffect(() => {
     if (data?.posts) {
       setPosts(data?.posts)
@@ -95,7 +95,6 @@ const Posts = (props) => {
           onClick={searchHandler}
         />
       </Input>
-      <Something/>
       {postsContent}
     </>
   )

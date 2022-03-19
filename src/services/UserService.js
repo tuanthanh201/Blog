@@ -3,7 +3,6 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const { DataSource } = require('apollo-datasource')
 const { AuthenticationError, UserInputError } = require('apollo-server')
 const bcrypt = require('bcryptjs')
-const { withFilter } = require('graphql-subscriptions')
 const jwt = require('jsonwebtoken')
 
 const { checkAuth, validateUserInput } = require('../utils')
@@ -153,37 +152,6 @@ class UserService extends DataSource {
     } catch (error) {
       throw new Error(error)
     }
-  }
-
-  async subscribe(userId) {
-    try {
-      const user = await checkAuth(this.context.req, this.store.userRepo)
-      const author = await this.store.userRepo.findById(userId)
-
-      if (!author) {
-        throw new Error('Author does not exist')
-      }
-
-      // check if already subscribed to author
-      if (
-        author.subscribers.some(
-          (subscriber) => subscriber._id.toString() === user._id.toString()
-        )
-      ) {
-        author.subscribers = author.subscribers.filter(
-          (subscribe) => subscribe._id.toString() !== user._id.toString()
-        )
-      } else {
-        author.subscribers.push(user._id)
-      }
-      return await this.store.userRepo.save(author)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async newNotification(context) {
-    return context.pubsub.asyncIterator('NEW_NOTIFICATION')
   }
 }
 

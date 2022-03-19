@@ -30,6 +30,3 @@ extend type Mutation {
   login(loginInput: LoginInput!): User!
   logout: String
 }
-extend type Subscription {
-  newNotification(userId: ID!): Notification
-}
