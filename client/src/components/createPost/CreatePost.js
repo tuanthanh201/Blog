@@ -56,7 +56,6 @@ const CreatePost = (props) => {
     onDrop: imageUploadHandler,
     noClick: true,
   })
-  console.log(body)
 
   useEffect(() => {
     if (tags) {

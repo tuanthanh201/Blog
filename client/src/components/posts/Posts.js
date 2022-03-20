@@ -25,7 +25,6 @@ const Posts = (props) => {
     FIND_POSTS_BY_TERM_TRENDING
   )
 
-  console.log(data)
   useEffect(() => {
     if (data?.posts) {
       setPosts(data?.posts)

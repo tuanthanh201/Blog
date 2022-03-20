@@ -25,6 +25,7 @@ const SinglePost = (props) => {
   const [hideComments, setHideComments] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editMode, setEditMode] = useState(false)
+  const [active, setActive] = useState('post')
   const { loading, data } = useQuery(GET_POST_BY_ID, {
     variables: { postId },
   })
@@ -55,6 +56,15 @@ const SinglePost = (props) => {
     navigate('/')
   }
 
+  const toggleEditModeHandler = () => {
+    setActive('edit')
+    setEditMode((prev) => !prev)
+  }
+
+  const labelClickHandler = (e, { name }) => {
+    setActive(name)
+  }
+
   if (!data || !data.post) {
     return (
       <NotFound
@@ -76,16 +86,35 @@ const SinglePost = (props) => {
         onCancel={cancelHandler}
         onConfirm={confirmHandler}
       />
-      <Menu attached="top">
-        <Menu.Item as={Link} to={`/users/${post.author.id}`}>
-          {post.author.username}
-        </Menu.Item>
+      <Menu attached="top" tabular>
+        {!editMode && (
+          <Menu.Item
+            as={Link}
+            to={`/users/${post.author.id}`}
+            active={!editMode}>
+            {post.author.username}
+          </Menu.Item>
+        )}
+        {editMode && (
+          <>
+            <Menu.Item
+              name="edit"
+              active={active === 'edit'}
+              onClick={labelClickHandler}
+            />
+            <Menu.Item
+              name="preview"
+              active={active === 'preview'}
+              onClick={labelClickHandler}
+            />
+          </>
+        )}
         {isOwner && (
           <Menu.Menu position="right">
             <FadeButton
               icon="edit"
               content="Edit"
-              onClick={() => setEditMode((prev) => !prev)}
+              onClick={toggleEditModeHandler}
             />
             <FadeButton
               icon="trash"
@@ -97,7 +126,13 @@ const SinglePost = (props) => {
         )}
       </Menu>
       {!editMode && <PostContent post={post} />}
-      {editMode && <EditPost post={post} onCancel={() => setEditMode(false)} />}
+      {editMode && (
+        <EditPost
+          active={active}
+          post={post}
+          onCancel={() => setEditMode(false)}
+        />
+      )}
       <Button
         as="div"
         labelPosition="right"
