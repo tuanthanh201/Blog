@@ -4,8 +4,8 @@ import { useMutation, useQuery } from '@apollo/client'
 import { Button, Icon, Label, Menu } from 'semantic-ui-react'
 import nProgress from 'nprogress'
 import {
-  cacheUpdateDeletePost,
   DELETE_POST,
+  GET_ALL_POSTS,
   GET_POST_BY_ID,
   LIKE_POST,
 } from '../../graphql'
@@ -48,9 +48,7 @@ const SinglePost = (props) => {
     nProgress.start()
     await deletePost({
       variables: { postId },
-      update(cache, payload) {
-        cacheUpdateDeletePost(cache, payload, postId)
-      },
+      refetchQueries: [{ query: GET_ALL_POSTS }],
     }).catch((e) => console.error(e))
     nProgress.done()
     navigate('/')

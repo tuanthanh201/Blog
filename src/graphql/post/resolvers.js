@@ -23,22 +23,32 @@ const resolvers = {
     async findPostById(_, args, { dataSources }) {
       return await dataSources.postService.findPostById(args.postId)
     },
-    async findAllPosts(_, __, { dataSources }) {
-      return await dataSources.postService.findAllPosts()
+    async findAllPosts(_, args, { dataSources }) {
+      return await dataSources.postService.findAllPosts(args.cursor)
     },
     async findPostsByTermSortNewest(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTermSortNewest(args.term)
+      return await dataSources.postService.findPostsByTermSortNewest(
+        args.term,
+        args.cursor
+      )
     },
     async findPostsByTermSortTrending(_, args, { dataSources }) {
       return await dataSources.postService.findPostsByTermSortTrending(
-        args.term
+        args.term,
+        args.cursor
       )
     },
     async findPostsByTagSortNewest(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTagSortNewest(args.tag)
+      return await dataSources.postService.findPostsByTagSortNewest(
+        args.tag,
+        args.cursor
+      )
     },
     async findPostsByTagSortTrending(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTagSortTrending(args.tag)
+      return await dataSources.postService.findPostsByTagSortTrending(
+        args.tag,
+        args.cursor
+      )
     },
   },
   Mutation: {

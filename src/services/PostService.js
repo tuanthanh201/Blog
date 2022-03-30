@@ -1,5 +1,6 @@
 const { DataSource } = require('apollo-datasource')
 const { AuthenticationError, UserInputError } = require('apollo-server')
+const mongoose = require('mongoose')
 
 const { checkAuth, validatePostInput } = require('../utils')
 const { uploadBase64Image, deleteImages, getCloudFrontUrl } = require('../S3')
@@ -8,6 +9,7 @@ class PostService extends DataSource {
   constructor({ store }) {
     super()
     this.store = store
+    this.limit = 11
   }
 
   initialize(config) {
@@ -22,9 +24,27 @@ class PostService extends DataSource {
     }
   }
 
-  async findAllPosts() {
+  getPostQuery(posts) {
+    const postsLength = posts.length
+    let last = posts[postsLength - 1]?._id
+    let hasMore = false
+    if (postsLength === this.limit) {
+      posts.pop()
+      hasMore = true
+      last = posts[postsLength - 2]?._id
+    }
+    return { posts, hasMore, last }
+  }
+
+  async findAllPosts(cursor) {
     try {
-      return await this.store.postRepo.findManyAndSort({}, { createdAt: -1 })
+      const findOption = cursor ? { _id: { $lt: cursor } } : {}
+      const posts = await this.store.postRepo.findManyAndSort(
+        findOption,
+        { _id: -1 },
+        this.limit
+      )
+      return this.getPostQuery(posts)
     } catch (error) {
       throw new Error(error)
     }
@@ -39,29 +59,107 @@ class PostService extends DataSource {
     } catch (error) {}
   }
 
-  async findPostsByTermSortNewest(term) {
+  async findPostsByTermSortNewest(term, cursor) {
     try {
       const searchOption = { $regex: `${term}`, $options: 'i' }
+      const findOption = cursor
+        ? {
+            $and: [
+              { _id: { $lt: cursor } },
+              { $or: [{ title: searchOption }, { body: searchOption }] },
+            ],
+          }
+        : { $or: [{ title: searchOption }, { body: searchOption }] }
       const posts = await this.store.postRepo.findManyAndSort(
-        {
-          $or: [{ title: searchOption }, { body: searchOption }],
-        },
-        { _id: -1 }
+        findOption,
+        { _id: -1 },
+        this.limit
       )
-      return posts
+      return this.getPostQuery(posts)
     } catch (error) {
       throw new Error(error)
     }
   }
 
-  async findPostsByTermSortTrending(term) {
+  async findPostsByTermSortTrending(term, cursor) {
     try {
       const searchOption = { $regex: `${term}`, $options: 'i' }
+      const findOption = cursor
+        ? {
+            $and: [
+              { _id: { $lt: mongoose.Types.ObjectId(cursor) } },
+              { $or: [{ title: searchOption }, { body: searchOption }] },
+            ],
+          }
+        : { $or: [{ title: searchOption }, { body: searchOption }] }
+      const aggregations = [
+        { $match: findOption },
+        {
+          $addFields: {
+            popularity: {
+              $divide: [
+                { $size: '$likes' },
+                {
+                  $pow: [
+                    {
+                      $add: [
+                        {
+                          $dateDiff: {
+                            startDate: '$createdAt',
+                            endDate: new Date(),
+                            unit: 'hour',
+                          },
+                        },
+                        2,
+                      ],
+                    },
+                    1.5,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ]
+      const posts = await this.store.postRepo.findAndSortByAggrField(
+        aggregations,
+        { popularity: -1, _id: -1 },
+        this.limit
+      )
+      return this.getPostQuery(posts)
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findPostsByTagSortNewest(tag, cursor) {
+    try {
+      const searchOption = { $regex: `${tag}`, $options: 'i' }
+      const findOption = cursor
+        ? { $and: [{ _id: { $lt: cursor } }, { 'tags.content': searchOption }] }
+        : { 'tags.content': searchOption }
+      const posts = await this.store.postRepo.findManyAndSort(
+        findOption,
+        { _id: -1 },
+        this.limit
+      )
+      return this.getPostQuery(posts)
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
+  async findPostsByTagSortTrending(tag, cursor) {
+    try {
+      const searchOption = { $regex: `${tag}`, $options: 'i' }
+      const findOption = cursor
+        ? {
+            $and: [{ _id: { $lt: cursor } }, { 'tags.content': searchOption }],
+          }
+        : { 'tags.content': searchOption }
       const aggregations = [
         {
-          $match: {
-            $or: [{ title: searchOption }, { body: searchOption }],
-          },
+          $match: findOption,
         },
         {
           $addFields: {
@@ -92,66 +190,10 @@ class PostService extends DataSource {
       ]
       const posts = await this.store.postRepo.findAndSortByAggrField(
         aggregations,
-        { popularity: -1, _id: -1 }
+        { popularity: -1, _id: -1 },
+        this.limit
       )
-      return posts
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findPostsByTagSortNewest(tag) {
-    try {
-      const searchOption = { $regex: `${tag}`, $options: 'i' }
-      const posts = await this.store.postRepo.findManyAndSort(
-        { 'tags.content': searchOption },
-        { _id: -1 }
-      )
-      return posts
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findPostsByTagSortTrending(tag) {
-    try {
-      const searchOption = { $regex: `${tag}`, $options: 'i' }
-      const aggregations = [
-        {
-          $match: { 'tags.content': searchOption },
-        },
-        {
-          $addFields: {
-            popularity: {
-              $divide: [
-                { $size: '$likes' },
-                {
-                  $pow: [
-                    {
-                      $add: [
-                        {
-                          $dateDiff: {
-                            startDate: '$createdAt',
-                            endDate: new Date(),
-                            unit: 'hour',
-                          },
-                        },
-                        2,
-                      ],
-                    },
-                    1.5,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      ]
-      const posts = await this.store.postRepo.findAndSortByAggrField(
-        aggregations,
-        { popularity: -1, _id: -1 }
-      )
-      return posts
+      return this.getPostQuery(posts)
     } catch (error) {
       throw new Error(error)
     }

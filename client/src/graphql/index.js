@@ -2,35 +2,39 @@ import { gql } from '@apollo/client'
 
 //#region Queries
 export const GET_ALL_POSTS = gql`
-  query {
-    posts: findAllPosts {
-      id
-      author {
-        id
-        username
-      }
-      title
-      body
-      image
-      tags {
-        id
-        content
-      }
-      likeCount
-      likes {
-        id
-      }
-      commentCount
-      comments {
+  query ($cursor: ID) {
+    findAllPosts(cursor: $cursor) {
+      hasMore
+      last
+      posts {
         id
         author {
           id
           username
         }
+        title
         body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
         createdAt
       }
-      createdAt
     }
   }
 `
@@ -70,137 +74,153 @@ export const GET_POST_BY_ID = gql`
 `
 
 export const FIND_POSTS_BY_TERM_NEWEST = gql`
-  query ($term: String!) {
-    posts: findPostsByTermSortNewest(term: $term) {
-      id
-      author {
-        id
-        username
-      }
-      title
-      body
-      image
-      tags {
-        id
-        content
-      }
-      likeCount
-      likes {
-        id
-      }
-      commentCount
-      comments {
+  query ($term: String!, $cursor: ID) {
+    findPostsByTermSortNewest(term: $term, cursor: $cursor) {
+      hasMore
+      last
+      posts {
         id
         author {
           id
           username
         }
+        title
         body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
         createdAt
       }
-      createdAt
     }
   }
 `
 
 export const FIND_POSTS_BY_TERM_TRENDING = gql`
-  query ($term: String!) {
-    posts: findPostsByTermSortTrending(term: $term) {
-      id
-      author {
-        id
-        username
-      }
-      title
-      body
-      image
-      tags {
-        id
-        content
-      }
-      likeCount
-      likes {
-        id
-      }
-      commentCount
-      comments {
+  query ($term: String!, $cursor: ID) {
+    findPostsByTermSortTrending(term: $term, cursor: $cursor) {
+      hasMore
+      last
+      posts {
         id
         author {
           id
           username
         }
+        title
         body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
         createdAt
       }
-      createdAt
     }
   }
 `
 
 export const FIND_POSTS_BY_TAG_NEWEST = gql`
-  query ($tag: String!) {
-    posts: findPostsByTagSortNewest(tag: $tag) {
-      id
-      author {
-        id
-        username
-      }
-      title
-      body
-      image
-      tags {
-        id
-        content
-      }
-      likeCount
-      likes {
-        id
-      }
-      commentCount
-      comments {
+  query ($tag: String!, $cursor: ID) {
+    findPostsByTagSortNewest(tag: $tag, cursor: $cursor) {
+      hasMore
+      last
+      posts {
         id
         author {
           id
           username
         }
+        title
         body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
         createdAt
       }
-      createdAt
     }
   }
 `
 
 export const FIND_POSTS_BY_TAG_TRENDING = gql`
-  query ($tag: String!) {
-    posts: findPostsByTagSortTrending(tag: $tag) {
-      id
-      author {
-        id
-        username
-      }
-      title
-      body
-      image
-      tags {
-        id
-        content
-      }
-      likeCount
-      likes {
-        id
-      }
-      commentCount
-      comments {
+  query ($tag: String!, $cursor: ID) {
+    findPostsByTagSortTrending(tag: $tag, cursor: $cursor) {
+      hasMore
+      last
+      posts {
         id
         author {
           id
           username
         }
+        title
         body
+        image
+        tags {
+          id
+          content
+        }
+        likeCount
+        likes {
+          id
+        }
+        commentCount
+        comments {
+          id
+          author {
+            id
+            username
+          }
+          body
+          createdAt
+        }
         createdAt
       }
-      createdAt
     }
   }
 `
@@ -520,10 +540,15 @@ export const cacheUpdateLogout = (cache, payload) => {
 export const cacheUpdateCreatePost = (cache, payload) => {
   const post = payload?.data?.post
   const postsData = cache.readQuery({ query: GET_ALL_POSTS })
+  const {hasMore, last} = postsData.findAllPosts
   cache.writeQuery({
     query: GET_ALL_POSTS,
     data: {
-      posts: [post, ...postsData.posts],
+      findAllPosts: {
+        last,
+        hasMore,
+        posts: [post, ...postsData.findAllPosts.posts],
+      },
     },
   })
   const tagsData = cache.readQuery({ query: GET_ALL_TAGS })
@@ -541,11 +566,14 @@ export const cacheUpdateCreatePost = (cache, payload) => {
 
 export const cacheUpdateDeletePost = (cache, payload, postId) => {
   const data = cache.readQuery({ query: GET_ALL_POSTS })
-  const newPosts = data?.posts.filter((post) => post.id !== postId)
+  const newPosts = data?.findAllPosts?.posts.filter((post) => post.id !== postId)
   cache.writeQuery({
     query: GET_ALL_POSTS,
     data: {
-      posts: newPosts,
+      findAllPosts: {
+        ...data?.findAllPosts,
+        posts: newPosts
+      },
     },
   })
 }

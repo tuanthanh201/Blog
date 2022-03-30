@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/client'
 import { v4 as uuidv4 } from 'uuid'
 import { Form, Menu, Segment } from 'semantic-ui-react'
 import nProgress from 'nprogress'
-import { cacheUpdateCreatePost, CREATE_POST, UPLOAD_IMAGE } from '../../graphql'
+import { cacheUpdateCreatePost, CREATE_POST, GET_ALL_POSTS, GET_ALL_TAGS, UPLOAD_IMAGE } from '../../graphql'
 import useInput from '../../hooks/useInput'
 import useTags from '../../hooks/useTags'
 import { toBase64 } from '../utils/imageToBase64'
@@ -99,9 +99,10 @@ const CreatePost = (props) => {
     }
     await createPost({
       variables: { postInput },
-      update(cache, payload) {
-        cacheUpdateCreatePost(cache, payload)
-      },
+      // update(cache, payload) {
+      //   cacheUpdateCreatePost(cache, payload)
+      // },
+      refetchQueries: [{query: GET_ALL_POSTS}, {query: GET_ALL_TAGS}]
     }).catch((e) => console.error(e))
     nProgress.done()
     navigate('/')

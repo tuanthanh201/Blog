@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Form, Message, Segment, Menu } from 'semantic-ui-react'
+import { Button, Form, Message, Segment } from 'semantic-ui-react'
 import { useMutation } from '@apollo/client'
 import nProgress from 'nprogress'
 import { v4 as uuidv4 } from 'uuid'
@@ -33,7 +33,7 @@ const EditPost = (props) => {
     valueIsInvalid: bodyIsInvalid,
     valueChangeHandler: bodyChangeHandler,
     valueBlurHandler: bodyBlurHandler,
-    addToInput: addToBody
+    addToInput: addToBody,
   } = useInput((body) => body.trim() !== '', post.body)
   const [editPost, { loading, data, error }] = useMutation(EDIT_POST)
   const [uploadImage] = useMutation(UPLOAD_IMAGE)
@@ -144,7 +144,7 @@ const EditPost = (props) => {
             <div {...getRootProps()}>
               <input {...getInputProps()} />
               <Form.TextArea
-              disabled={uploadingImages}
+                disabled={uploadingImages}
                 required
                 rows={10}
                 label="Body"

@@ -15,10 +15,6 @@ const EditProfile = (props) => {
   const submitHandler = async (e) => {
     e.preventDefault()
     nProgress.start()
-    console.log({
-      userId: props.userId,
-      bio,
-    })
     await updateBio({
       variables: {
         userId: props.userId,

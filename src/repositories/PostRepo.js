@@ -49,17 +49,19 @@ const findMany = async (cond) => {
   }
 }
 
-const findManyAndSort = async (findOptions, sortOptions) => {
+const findManyAndSort = async (findOptions, sortOptions, limitOptions) => {
   try {
-    return await Post.find(findOptions).sort(sortOptions)
+    return await Post.find(findOptions).sort(sortOptions).limit(limitOptions)
   } catch (error) {
     throw new Error(error)
   }
 }
 
-const findAndSortByAggrField = async (aggregations, sortOptions) => {
+const findAndSortByAggrField = async (aggregations, sortOptions, limitOptions) => {
   try {
-    return await Post.aggregate(aggregations).sort(sortOptions)
+    return await Post.aggregate(aggregations)
+      .sort(sortOptions)
+      .limit(limitOptions)
   } catch (error) {
     throw new Error(error)
   }
