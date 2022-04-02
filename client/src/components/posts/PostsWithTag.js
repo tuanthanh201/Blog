@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Menu, Item, Button, Select } from 'semantic-ui-react'
 import { useLazyQuery, useQuery } from '@apollo/client'
@@ -7,7 +8,6 @@ import {
   FIND_POSTS_BY_TAG_TRENDING,
 } from '../../graphql'
 import Post from './Post'
-import { useEffect, useState } from 'react'
 
 const options = [
   { key: 'newest', text: 'Newest', value: 'newest' },
@@ -17,9 +17,7 @@ const options = [
 const PostsWithTag = (props) => {
   const { tagContent } = useParams()
   const [sortBy, setSortBy] = useState('newest')
-  const [posts, setPosts] = useState([])
   const [searched, setSearched] = useState(false)
-  const [hasMore, setHasMore] = useState(false)
   const {
     loading: allPostsloading,
     data,
@@ -43,48 +41,10 @@ const PostsWithTag = (props) => {
   ] = useLazyQuery(FIND_POSTS_BY_TAG_TRENDING, {
     variables: { tag: tagContent },
   })
-  console.log(tagContent)
-  console.log(data)
-
-  useEffect(() => {
-    if (!searched) {
-      setHasMore(data?.findPostsByTagSortNewest?.hasMore)
-      data?.findPostsByTagSortNewest?.posts &&
-        setPosts(data?.findPostsByTagSortNewest?.posts)
-    } else {
-      let morePosts = false
-      let fetchedPosts = []
-      if (sortBy === 'newest') {
-        morePosts = postsNewest?.findPostsByTagSortNewest?.hasMore
-        fetchedPosts = postsNewest?.findPostsByTagSortNewest?.posts
-      } else {
-        morePosts = postsTrending?.findPostsByTagSortTrending?.hasMore
-        fetchedPosts = postsTrending?.findPostsByTagSortTrending?.posts
-      }
-      setHasMore(morePosts)
-      setPosts(fetchedPosts)
-    }
-  }, [
-    data?.findPostsByTagSortNewest?.hasMore,
-    data?.findPostsByTagSortNewest?.posts,
-    postsNewest?.findPostsByTagSortNewest?.hasMore,
-    postsNewest?.findPostsByTagSortNewest?.posts,
-    postsTrending?.findPostsByTagSortTrending?.hasMore,
-    postsTrending?.findPostsByTagSortTrending?.posts,
-    searched,
-    sortBy,
-  ])
 
   const sortHandler = async () => {
-    let sortedPosts
-    if (sortBy === 'newest') {
-      const { data } = await findPostsNewest().catch((e) => console.error(e))
-      sortedPosts = data.posts
-    } else if (sortBy === 'trending') {
-      const { data } = await findPostsTrending().catch((e) => console.error(e))
-      sortedPosts = data.posts
-    }
-    sortedPosts && setPosts(sortedPosts)
+    await findPostsNewest().catch((e) => console.error(e))
+    await findPostsTrending().catch((e) => console.error(e))
     setSearched(true)
   }
 
@@ -117,6 +77,20 @@ const PostsWithTag = (props) => {
 
   let postsContent
   if (!(allPostsloading || loadingNewest || loadingTrending)) {
+    let posts = []
+    let hasMore = false
+    if (!searched) {
+      posts = data.findPostsByTagSortNewest.posts
+      hasMore = data.findPostsByTagSortNewest.hasMore
+    } else {
+      if (sortBy === 'newest') {
+        posts = postsNewest.findPostsByTagSortNewest.posts
+        hasMore = postsNewest.findPostsByTagSortNewest.hasMore
+      } else {
+        posts = postsTrending.findPostsByTagSortTrending.posts
+        hasMore = postsTrending.findPostsByTagSortTrending.hasMore
+      }
+    }
     postsContent = (
       <InfiniteScroll
         dataLength={posts.length}
