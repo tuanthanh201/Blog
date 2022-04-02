@@ -66,10 +66,10 @@ class PostService extends DataSource {
         ? {
             $and: [
               { _id: { $lt: cursor } },
-              { $or: [{ title: searchOption }, { body: searchOption }] },
+              { $or: [{ title: searchOption }] },
             ],
           }
-        : { $or: [{ title: searchOption }, { body: searchOption }] }
+        : { $or: [{ title: searchOption }] }
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
         { _id: -1 },
@@ -88,10 +88,10 @@ class PostService extends DataSource {
         ? {
             $and: [
               { _id: { $lt: mongoose.Types.ObjectId(cursor) } },
-              { $or: [{ title: searchOption }, { body: searchOption }] },
+              { $or: [{ title: searchOption }] },
             ],
           }
-        : { $or: [{ title: searchOption }, { body: searchOption }] }
+        : { $or: [{ title: searchOption }] }
       const aggregations = [
         { $match: findOption },
         {
