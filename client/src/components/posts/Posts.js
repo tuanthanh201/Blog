@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLazyQuery, useQuery } from '@apollo/client'
 import { Button, Input, Item, Select } from 'semantic-ui-react'
 import InfiniteScroll from 'react-infinite-scroll-component'
@@ -17,9 +17,7 @@ const options = [
 const Posts = (props) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('newest')
-  const [posts, setPosts] = useState([])
   const [searched, setSearched] = useState(false)
-  const [hasMore, setHasMore] = useState(false)
   const {
     loading: allPostsloading,
     data,
@@ -42,49 +40,13 @@ const Posts = (props) => {
     },
   ] = useLazyQuery(FIND_POSTS_BY_TERM_TRENDING)
 
-
-  useEffect(() => {
-    if (!searched) {
-      setHasMore(data?.findAllPosts?.hasMore)
-      data?.findAllPosts?.posts && setPosts(data?.findAllPosts?.posts)
-    } else {
-      let morePosts = false
-      let fetchedPosts = []
-      if (sortBy === 'newest') {
-        morePosts = postsNewest?.findPostsByTermSortNewest?.hasMore
-        fetchedPosts = postsNewest?.findPostsByTermSortNewest?.posts
-      } else {
-        morePosts = postsTrending?.findPostsByTermSortTrending?.hasMore
-        fetchedPosts = postsTrending?.findPostsByTermSortTrending?.posts
-      }
-      setHasMore(morePosts)
-      setPosts(fetchedPosts)
-    }
-  }, [
-    data?.findAllPosts?.hasMore,
-    data?.findAllPosts?.posts,
-    postsNewest?.findPostsByTermSortNewest?.hasMore,
-    postsNewest?.findPostsByTermSortNewest?.posts,
-    postsTrending?.findPostsByTermSortTrending?.hasMore,
-    postsTrending?.findPostsByTermSortTrending?.posts,
-    searched,
-    sortBy,
-  ])
-
   const searchHandler = async () => {
-    let postsFound
-    if (sortBy === 'newest') {
-      const { data } = await findPostsNewest({
-        variables: { term: searchTerm },
-      }).catch((e) => console.error(e))
-      postsFound = data.findPostsByTermSortNewest.posts
-    } else {
-      const { data } = await findPostsTrending({
-        variables: { term: searchTerm },
-      }).catch((e) => console.error(e))
-      postsFound = data.findPostsByTermSortTrending.posts
-    }
-    if (postsFound) setPosts(postsFound)
+    await findPostsNewest({
+      variables: { term: searchTerm },
+    }).catch((e) => console.error(e))
+    await findPostsTrending({
+      variables: { term: searchTerm },
+    }).catch((e) => console.error(e))
     setSearched(true)
   }
 
@@ -112,6 +74,20 @@ const Posts = (props) => {
 
   let postsContent
   if (!(allPostsloading || findingNewestPosts || FindingTrendingPosts)) {
+    let posts = []
+    let hasMore = false
+    if (!searched) {
+      posts = data.findAllPosts.posts
+      hasMore = data.findAllPosts.hasMore
+    } else {
+      if (sortBy === 'newest') {
+        posts = postsNewest.findPostsByTermSortNewest.posts
+        hasMore = postsNewest.findPostsByTermSortNewest.hasMore
+      } else {
+        posts = postsTrending.findPostsByTermSortTrending.posts
+        hasMore = postsTrending.findPostsByTermSortTrending.hasMore
+      }
+    }
     postsContent = (
       <InfiniteScroll
         dataLength={posts.length}
