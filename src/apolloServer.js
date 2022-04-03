@@ -33,7 +33,8 @@ const setupApolloServer = async () => {
       }
     } catch (error) {
       res.cookie('token', '', {
-        httpOnly: false,
+        httpOnly: true,
+        sameSite: 'lax',
         expires: new Date(0),
       })
     }

@@ -112,6 +112,7 @@ const EditPost = (props) => {
             <Form.Radio
               label="Replace Image"
               toggle
+              checked={showImageField}
               onChange={() => setShowImageField((prev) => !prev)}></Form.Radio>
             {showImageField && (
               <Form.Input

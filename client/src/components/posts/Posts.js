@@ -52,7 +52,7 @@ const Posts = (props) => {
 
   const fetchMore = () => {
     if (!searched) {
-      fetchMorePosts({ variables: { cursor: data.findAllPosts.last } })
+      fetchMorePosts({ variables: { cursor: data?.findAllPosts.last } })
     } else {
       if (sortBy === 'newest') {
         fetchMorePostsNewest({
@@ -77,8 +77,8 @@ const Posts = (props) => {
     let posts = []
     let hasMore = false
     if (!searched) {
-      posts = data.findAllPosts.posts
-      hasMore = data.findAllPosts.hasMore
+      posts = data?.findAllPosts.posts
+      hasMore = data?.findAllPosts.hasMore
     } else {
       if (sortBy === 'newest') {
         posts = postsNewest.findPostsByTermSortNewest.posts
@@ -96,7 +96,7 @@ const Posts = (props) => {
         loader={<h4 style={{ textAlign: 'center' }}>Loading...</h4>}
         endMessage={
           <p style={{ textAlign: 'center' }}>
-            <b>You have seen it all</b>
+            <b>You have seen all posts</b>
           </p>
         }>
         <Item.Group divided style={{ paddingTop: '1rem' }}>

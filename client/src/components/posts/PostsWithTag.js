@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { Menu, Item, Button, Select } from 'semantic-ui-react'
 import { useLazyQuery, useQuery } from '@apollo/client'
@@ -42,6 +42,15 @@ const PostsWithTag = (props) => {
     variables: { tag: tagContent },
   })
 
+  const tagContentChangeHandler = useCallback(async () => {
+    await findPostsNewest().catch((e) => console.error(e))
+    await findPostsTrending().catch((e) => console.error(e))
+  }, [findPostsNewest, findPostsTrending])
+
+  useEffect(() => {
+    tagContentChangeHandler()
+  }, [tagContent, tagContentChangeHandler])
+
   const sortHandler = async () => {
     await findPostsNewest().catch((e) => console.error(e))
     await findPostsTrending().catch((e) => console.error(e))
@@ -50,7 +59,7 @@ const PostsWithTag = (props) => {
 
   const fetchMore = () => {
     if (!searched) {
-      fetchMorePosts({
+        fetchMorePosts({
         variables: {
           tag: tagContent,
           cursor: data.findPostsByTagSortNewest.last,
@@ -99,7 +108,7 @@ const PostsWithTag = (props) => {
         loader={<h4 style={{ textAlign: 'center' }}>Loading...</h4>}
         endMessage={
           <p style={{ textAlign: 'center' }}>
-            <b>You have seen it all</b>
+            <b>You have seen all posts</b>
           </p>
         }>
         <Item.Group divided style={{ paddingTop: '1rem' }}>

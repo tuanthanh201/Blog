@@ -4,6 +4,7 @@ import {
   ApolloProvider,
   createHttpLink,
 } from '@apollo/client'
+import _ from 'lodash'
 
 const httpLink = createHttpLink({
   uri: 'http://localhost:4000/graphql',
@@ -69,9 +70,16 @@ const client = new ApolloClient({
           merge(existing, incoming) {
             let posts
             if (existing?.posts) {
-              posts = [...existing?.posts, ...incoming.posts]
+              posts = _.cloneDeep(existing.posts);
             } else {
-              posts = [...incoming.posts]
+              posts = []
+            }
+            const postIds = existing?.posts.map(post => post.__ref)
+            const postsSet = new Set(postIds)
+            for (const post of incoming.posts) {
+              if (!postsSet.has(post.__ref)) {
+                posts.push(post)
+              }
             }
             return {
               ...incoming,
@@ -80,14 +88,20 @@ const client = new ApolloClient({
           },
         },
         findPostsByTagSortTrending: {
-          keyArgs: false,
+          keyArgs: ['tag'],
           merge(existing, incoming) {
-            console.log({existing, incoming})
             let posts
             if (existing?.posts) {
-              posts = [...existing?.posts, ...incoming.posts]
+              posts = _.cloneDeep(existing.posts);
             } else {
-              posts = [...incoming.posts]
+              posts = []
+            }
+            const postIds = existing?.posts.map(post => post.__ref)
+            const postsSet = new Set(postIds)
+            for (const post of incoming.posts) {
+              if (!postsSet.has(post.__ref)) {
+                posts.push(post)
+              }
             }
             return {
               ...incoming,

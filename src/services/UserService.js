@@ -97,7 +97,8 @@ class UserService extends DataSource {
       const token = this.generateToken(newUser)
       this.context.res.cookie('token', token, {
         maxAge: 1000 * 60 * 60 * 3,
-        httpOnly: false,
+        httpOnly: true,
+        sameSite: 'lax',
       })
       return newUser
     } catch (error) {
@@ -124,7 +125,8 @@ class UserService extends DataSource {
       const token = this.generateToken(user)
       this.context.res.cookie('token', token, {
         maxAge: 1000 * 60 * 60 * 3,
-        httpOnly: false,
+        httpOnly: true,
+        sameSite: 'lax',
       })
       return user
     } catch (error) {
@@ -134,7 +136,8 @@ class UserService extends DataSource {
 
   async logout() {
     this.context.res.cookie('token', '', {
-      httpOnly: false,
+      httpOnly: true,
+      sameSite: 'lax',
       expires: new Date(0),
     })
   }

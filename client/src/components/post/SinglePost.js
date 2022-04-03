@@ -79,7 +79,7 @@ const SinglePost = (props) => {
     <>
       <ConfirmModal
         open={showModal}
-        content="Are you sure you want to delete this post"
+        content="Are you sure you want to delete this post?"
         confirmButton={<Button negative>Delete</Button>}
         onCancel={cancelHandler}
         onConfirm={confirmHandler}
