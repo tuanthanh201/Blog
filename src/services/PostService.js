@@ -10,6 +10,7 @@ class PostService extends DataSource {
     super()
     this.store = store
     this.limit = 11
+    this.cachedPostsKey = 'allPosts'
   }
 
   initialize(config) {
@@ -33,17 +34,34 @@ class PostService extends DataSource {
       hasMore = true
       last = posts[postsLength - 2]?._id
     }
+    last = posts.reduce(
+      (prev, current) =>
+        prev._id.toString() < current._id.toString() ? prev._id : current._id,
+      last
+    )
     return { posts, hasMore, last }
   }
 
   async findAllPosts(cursor) {
     try {
+      const cachedPosts = await this.context.redis.lRange(
+        this.cachedPostsKey,
+        0,
+        -1
+      )
+      if (!cursor && cachedPosts.length !== 0) {
+        return this.getPostQuery(cachedPosts.map((x) => JSON.parse(x)))
+      }
       const findOption = cursor ? { _id: { $lt: cursor } } : {}
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
         { _id: -1 },
         this.limit
       )
+      if (!cursor && cachedPosts.length === 0) {
+        const postsToCache = posts.map((post) => JSON.stringify(post))
+        await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+      }
       return this.getPostQuery(posts)
     } catch (error) {
       throw new Error(error)
@@ -88,7 +106,7 @@ class PostService extends DataSource {
         ? {
             $and: [
               { _id: { $lt: mongoose.Types.ObjectId(cursor) } },
-              { $or: [{ title: searchOption }] },
+              { title: searchOption },
             ],
           }
         : { $or: [{ title: searchOption }] }
@@ -237,6 +255,17 @@ class PostService extends DataSource {
       // save post to user
       user.posts.push(newPost._id)
       await this.store.userRepo.save(user)
+      // store post into cache
+      const cachedPostsCount = await this.context.redis.lLen(
+        this.cachedPostsKey
+      )
+      if (cachedPostsCount === this.limit) {
+        await this.context.redis.rPop(this.cachedPostsKey)
+      }
+      await this.context.redis.lPush(
+        this.cachedPostsKey,
+        JSON.stringify(newPost)
+      )
       return newPost
     } catch (error) {
       throw new Error(error)
@@ -290,6 +319,27 @@ class PostService extends DataSource {
 
         post.title = postInput.title
         post.body = postInput.body
+
+        // edit cache
+        const cachedPosts = await this.context.redis.lRange(
+          this.cachedPostsKey,
+          0,
+          -1
+        )
+        const cachedPostsLength = await this.context.redis.lLen(
+          this.cachedPostsKey
+        )
+        for (let i = 0; i < cachedPostsLength; i++) {
+          const cachedPost = JSON.parse(cachedPosts[i])
+          if (cachedPost._id.toString() === post._id.toString()) {
+            await this.context.redis.lSet(
+              this.cachedPostsKey,
+              i,
+              JSON.stringify(post)
+            )
+            break
+          }
+        }
         return await this.store.postRepo.save(post)
       } else {
         throw new AuthenticationError(
@@ -316,10 +366,26 @@ class PostService extends DataSource {
       if (post.image !== '') {
         await deleteImages([post.image])
       }
-      await this.store.postRepo.deleteById(postId)
       user.posts = user.posts.filter((post) => post._id.toString() !== postId)
+      await this.store.postRepo.deleteById(postId)
       // remove post from user's posts
       await this.store.userRepo.save(user)
+      // clean up cache is post is cached
+      const cachedPosts = await this.context.redis.lRange(
+        this.cachedPostsKey,
+        0,
+        -1
+      )
+      const cachedPostsLength = await this.context.redis.lLen(
+        this.cachedPostsKey
+      )
+      for (let i = 0; i < cachedPostsLength; i++) {
+        const cachedPost = JSON.parse(cachedPosts[i])
+        if (cachedPost._id.toString() === postId) {
+          await this.context.redis.del(this.cachedPostsKey)
+          break
+        }
+      }
       return 'Post deleted'
     } catch (error) {
       throw new Error(error)

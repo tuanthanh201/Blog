@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const { ApolloServer } = require('apollo-server-express')
+const {createClient} = require('redis')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 
@@ -21,6 +22,10 @@ const dataSources = () => ({
 
 const setupApolloServer = async () => {
   const app = express()
+  const redis = createClient()
+  redis.on('connect', () => console.log('Connected to Redis'))
+  await redis.connect()
+  await redis.flushAll()
 
   app.use(cookieParser())
 
@@ -48,6 +53,7 @@ const setupApolloServer = async () => {
     context: ({ req, res }) => ({
       req,
       res,
+      redis
     }),
   })
 
