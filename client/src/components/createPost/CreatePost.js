@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { useMutation } from '@apollo/client'
 import { v4 as uuidv4 } from 'uuid'
-import { Form, Menu, Segment } from 'semantic-ui-react'
+import { Form, Menu, Message, Segment } from 'semantic-ui-react'
 import nProgress from 'nprogress'
 import {
   CREATE_POST,
   GET_ALL_POSTS,
   GET_ALL_TAGS,
+  GET_ME,
   UPLOAD_IMAGE,
 } from '../../graphql'
 import useInput from '../../hooks/useInput'
@@ -107,7 +108,11 @@ const CreatePost = (props) => {
       // update(cache, payload) {
       //   cacheUpdateCreatePost(cache, payload)
       // },
-      refetchQueries: [{ query: GET_ALL_POSTS }, { query: GET_ALL_TAGS }],
+      refetchQueries: [
+        { query: GET_ALL_POSTS },
+        { query: GET_ALL_TAGS },
+        { query: GET_ME },
+      ],
     }).catch((e) => console.error(e))
     nProgress.done()
     navigate('/')
@@ -183,6 +188,15 @@ const CreatePost = (props) => {
                 error={bodyError}
               />
             </div>
+            <Message attached="bottom" style={{paddingTop: '0.5rem', paddingBottom: '0.5rem'}}>
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://www.markdownguide.org/basic-syntax/">
+                Markdown
+              </a>
+              {' is supported'}
+            </Message>
             <Form.Button
               fluid
               loading={loading}

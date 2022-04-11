@@ -147,7 +147,7 @@ const EditPost = (props) => {
               <Form.TextArea
                 disabled={uploadingImages}
                 required
-                rows={10}
+                rows={25}
                 label="Body"
                 placeholder="Post content..."
                 value={body}
@@ -156,7 +156,16 @@ const EditPost = (props) => {
                 error={bodyError}
               />
             </div>
-            <Button.Group fluid>
+            <Message attached="bottom" style={{paddingTop: '0.5rem', paddingBottom: '0.5rem'}}>
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://www.markdownguide.org/basic-syntax/">
+                Markdown
+              </a>
+              {' is supported'}
+            </Message>
+            <Button.Group fluid style={{marginTop: '1.5rem'}}>
               <Button onClick={props.onCancel}>Cancel</Button>
               <Button.Or />
               <Button
