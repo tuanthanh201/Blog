@@ -70,6 +70,25 @@ const setupApolloServer = async () => {
     },
   })
 
+  if (process.env.NODE_ENV === 'production') {
+    const oneHour = 3600000;
+    app.use(
+        express.static(path.resolve(__dirname, '..', 'client', 'build'), {
+            maxAge: oneHour,
+        })
+    );
+    app.get('*', (req, res) => {
+        const filePath = path.resolve(
+            __dirname,
+            '..',
+            'client',
+            'build',
+            'index.html'
+        );
+        res.sendFile(filePath);
+    });
+}
+
   app.listen({ port: process.env.PORT }, () => {
     console.log(`Server is up on port ${process.env.PORT}`)
   })
