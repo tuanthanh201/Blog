@@ -9,8 +9,9 @@ class PostService extends DataSource {
   constructor({ store }) {
     super()
     this.store = store
-    this.limit = 11
+    this.limit = 6
     this.cachedPostsKey = 'allPosts'
+    this.cacheSize = 7
   }
 
   initialize(config) {
@@ -45,17 +46,42 @@ class PostService extends DataSource {
         0,
         -1
       )
-      if (!cursor && cachedPosts.length !== 0) {
-        return this.getPostQuery(cachedPosts.map((x) => JSON.parse(x)))
-      }
-      const findOption = cursor ? { _id: { $lt: cursor } } : {}
-      const posts = await this.store.postRepo.findManyAndSort(
-        findOption,
-        { _id: -1 },
-        this.limit
+      const cachedPostsLength = await this.context.redis.lLen(
+        this.cachedPostsKey
       )
-      if (!cursor && cachedPosts.length === 0) {
-        const postsToCache = posts.map((post) => JSON.stringify(post))
+      let postsToFetch = this.limit
+      let posts = []
+      if (cachedPostsLength !== 0) {
+        const parsedPosts = cachedPosts.map((x) => JSON.parse(x))
+        let postIndex = parsedPosts.findIndex((post) => post._id === cursor)
+        if (postIndex !== -1) {
+          postIndex = cursor ? postIndex + 1 : 0
+          for (let i = postIndex; i < postIndex + this.limit; i++) {
+            if (i >= cachedPostsLength) {
+              break
+            }
+            posts.push(parsedPosts[i])
+            cursor = parsedPosts[i]._id
+            postsToFetch--
+          }
+        }
+      }
+      if (postsToFetch !== 0) {
+        const findOption = cursor ? { _id: { $lt: cursor } } : {}
+        const fetchedPosts = await this.store.postRepo.findManyAndSort(
+          findOption,
+          { _id: -1 },
+          postsToFetch
+        )
+        posts = posts.concat(fetchedPosts)
+      }
+      if (cachedPostsLength === 0) {
+        let postsToCache = await this.store.postRepo.findManyAndSort(
+          {},
+          { _id: -1 },
+          this.cacheSize
+        )
+        postsToCache = postsToCache.map((post) => JSON.stringify(post))
         await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
       }
       return this.getPostQuery(posts)
@@ -268,20 +294,30 @@ class PostService extends DataSource {
       // remove post from user's posts
       await this.store.userRepo.save(user)
       // clean up cache is post is cached
-      const cachedPosts = await this.context.redis.lRange(
+      const stringifiedPost = JSON.stringify(post)
+      const removedCachedPost = await this.context.redis.lRem(
         this.cachedPostsKey,
         0,
-        -1
+        stringifiedPost
       )
-      const cachedPostsLength = await this.context.redis.lLen(
-        this.cachedPostsKey
-      )
-      for (let i = 0; i < cachedPostsLength; i++) {
-        const cachedPost = JSON.parse(cachedPosts[i])
-        if (cachedPost._id.toString() === postId) {
-          await this.context.redis.del(this.cachedPostsKey)
-          break
-        }
+      if (removedCachedPost !== 0) {
+        const cachedPosts = await this.context.redis.lRange(
+          this.cachedPostsKey,
+          0,
+          -1
+        )
+        const cachedPostsLength = await this.context.redis.lLen(
+          this.cachedPostsKey
+        )
+        const cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
+        const findOption = { _id: { $lt: cursor } }
+        const fetchedPosts = await this.store.postRepo.findManyAndSort(
+          findOption,
+          { _id: -1 },
+          removedCachedPost
+        )
+        const postsToCache = fetchedPosts.map((post) => JSON.stringify(post))
+        await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
       }
       return 'Post deleted'
     } catch (error) {
