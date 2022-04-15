@@ -77,13 +77,15 @@ const Posts = (props) => {
     let posts = []
     let hasMore = false
     if (!searched) {
-      posts = data?.findAllPosts.posts
+      posts = data?.findAllPosts.posts ? data?.findAllPosts.posts : []
       hasMore = data?.findAllPosts.hasMore
     } else {
       if (sortBy === 'newest') {
+        console.log('NEWEST')
         posts = postsNewest.findPostsByTermSortNewest.posts
         hasMore = postsNewest.findPostsByTermSortNewest.hasMore
       } else {
+        console.log('TRENDING')
         posts = postsTrending.findPostsByTermSortTrending.posts
         hasMore = postsTrending.findPostsByTermSortTrending.hasMore
       }
