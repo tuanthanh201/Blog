@@ -1,10 +1,14 @@
-import { Loader } from 'semantic-ui-react'
+import spinner from './spinner.gif'
 
 const Spinner = () => {
   return (
-    <div style={{ height: '100vh' }}>
-      <Loader active inline="centered" />
-    </div>
+    <>
+      <img
+        src={spinner}
+        style={{ width: '200px', margin: 'auto', display: 'block' }}
+        alt="Loading..."
+      />
+    </>
   )
 }
 
