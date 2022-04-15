@@ -21,30 +21,36 @@ const resolvers = {
   },
   Query: {
     async findPostById(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.findPostById(args.postId)
     },
     async findAllPosts(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.findAllPosts(args.cursor)
     },
     async findPostsByTermSortNewest(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.findPostsByTermSortNewest(
         args.term,
         args.cursor
       )
     },
     async findPostsByTermSortTrending(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.findPostsByTermSortTrending(
         args.term,
         args.cursor
       )
     },
     async findPostsByTagSortNewest(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.findPostsByTagSortNewest(
         args.tag,
         args.cursor
       )
     },
     async findPostsByTagSortTrending(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.findPostsByTagSortTrending(
         args.tag,
         args.cursor
@@ -53,24 +59,31 @@ const resolvers = {
   },
   Mutation: {
     async createPost(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.createPost(args)
     },
     async editPost(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.editPost(args)
     },
     async deletePost(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.deletePost(args.postId)
     },
     async createComment(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.createComment(args)
     },
     async editComment(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.editComment(args)
     },
     async deleteComment(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.deleteComment(args)
     },
     async likePost(_, args, { dataSources }) {
+      await dataSources.RateLimit.rateLimit()
       return await dataSources.postService.likePost(args.postId)
     },
   },
