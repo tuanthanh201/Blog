@@ -31,10 +31,8 @@ type PostQuery {
 extend type Query {
   findPostById(postId: ID!): Post
   findAllPosts(cursor: ID): PostQuery
-  findPostsByTermSortNewest(term: String!, cursor: ID): PostQuery
-  findPostsByTermSortTrending(term: String!, cursor: ID): PostQuery
-  findPostsByTagSortNewest(tag: String!, cursor: ID): PostQuery
-  findPostsByTagSortTrending(tag: String!, cursor: ID): PostQuery
+  findPostsByTerm(term: String!, cursor: ID): PostQuery
+  findPostsByTag(tag: String!, cursor: ID): PostQuery
 }
 extend type Mutation {
   createPost(postInput: PostInput!): Post!

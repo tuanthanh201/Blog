@@ -33,11 +33,8 @@ class PostService extends DataSource {
     if (postsLength === this.limit) {
       posts.pop()
       hasMore = true
+      last = postIds[postIds.length - 2]
     }
-    last = postIds.reduce(
-      (prev, current) => (prev < current ? prev : current),
-      last
-    )
     return { posts, hasMore, last }
   }
 
@@ -51,7 +48,7 @@ class PostService extends DataSource {
       if (!cursor && cachedPosts.length !== 0) {
         return this.getPostQuery(cachedPosts.map((x) => JSON.parse(x)))
       }
-      const findOption = cursor ? { _id: { $lte: cursor } } : {}
+      const findOption = cursor ? { _id: { $lt: cursor } } : {}
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
         { _id: -1 },
@@ -76,13 +73,13 @@ class PostService extends DataSource {
     } catch (error) {}
   }
 
-  async findPostsByTermSortNewest(term, cursor) {
+  async findPostsByTerm(term, cursor) {
     try {
       const searchOption = { $regex: `${term}`, $options: 'i' }
       const findOption = cursor
         ? {
             $and: [
-              { _id: { $lte: cursor } },
+              { _id: { $lt: cursor } },
               { $or: [{ title: searchOption }] },
             ],
           }
@@ -98,116 +95,17 @@ class PostService extends DataSource {
     }
   }
 
-  async findPostsByTermSortTrending(term, cursor) {
-    try {
-      const searchOption = { $regex: `${term}`, $options: 'i' }
-      const findOption = cursor
-        ? {
-            $and: [
-              { _id: { $lte: mongoose.Types.ObjectId(cursor) } },
-              { title: searchOption },
-            ],
-          }
-        : { $or: [{ title: searchOption }] }
-      const aggregations = [
-        { $match: findOption },
-        {
-          $addFields: {
-            popularity: {
-              $divide: [
-                { $size: '$likes' },
-                {
-                  $pow: [
-                    {
-                      $add: [
-                        {
-                          $dateDiff: {
-                            startDate: '$createdAt',
-                            endDate: new Date(),
-                            unit: 'hour',
-                          },
-                        },
-                        2,
-                      ],
-                    },
-                    1.5,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      ]
-      const posts = await this.store.postRepo.findAndSortByAggrField(
-        aggregations,
-        { popularity: -1, _id: -1 },
-        this.limit
-      )
-      return this.getPostQuery(posts)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findPostsByTagSortNewest(tag, cursor) {
+  async findPostsByTag(tag, cursor) {
     try {
       const searchOption = { $regex: `${tag}`, $options: 'i' }
       const findOption = cursor
-        ? { $and: [{ _id: { $lte: cursor } }, { 'tags.content': searchOption }] }
+        ? {
+            $and: [{ _id: { $lt: cursor } }, { 'tags.content': searchOption }],
+          }
         : { 'tags.content': searchOption }
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
         { _id: -1 },
-        this.limit
-      )
-      return this.getPostQuery(posts)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findPostsByTagSortTrending(tag, cursor) {
-    try {
-      const searchOption = { $regex: `${tag}`, $options: 'i' }
-      const findOption = cursor
-        ? {
-            $and: [{ _id: { $lte: cursor } }, { 'tags.content': searchOption }],
-          }
-        : { 'tags.content': searchOption }
-      const aggregations = [
-        {
-          $match: findOption,
-        },
-        {
-          $addFields: {
-            popularity: {
-              $divide: [
-                { $size: '$likes' },
-                {
-                  $pow: [
-                    {
-                      $add: [
-                        {
-                          $dateDiff: {
-                            startDate: '$createdAt',
-                            endDate: new Date(),
-                            unit: 'hour',
-                          },
-                        },
-                        2,
-                      ],
-                    },
-                    1.5,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      ]
-      const posts = await this.store.postRepo.findAndSortByAggrField(
-        aggregations,
-        { popularity: -1, _id: -1 },
         this.limit
       )
       return this.getPostQuery(posts)

@@ -73,9 +73,9 @@ export const GET_POST_BY_ID = gql`
   }
 `
 
-export const FIND_POSTS_BY_TERM_NEWEST = gql`
+export const FIND_POSTS_BY_TERM = gql`
   query ($term: String!, $cursor: ID) {
-    findPostsByTermSortNewest(term: $term, cursor: $cursor) {
+    findPostsByTerm(term: $term, cursor: $cursor) {
       hasMore
       last
       posts {
@@ -111,85 +111,9 @@ export const FIND_POSTS_BY_TERM_NEWEST = gql`
   }
 `
 
-export const FIND_POSTS_BY_TERM_TRENDING = gql`
-  query ($term: String!, $cursor: ID) {
-    findPostsByTermSortTrending(term: $term, cursor: $cursor) {
-      hasMore
-      last
-      posts {
-        id
-        author {
-          id
-          username
-        }
-        title
-        body
-        image
-        tags {
-          id
-          content
-        }
-        likeCount
-        likes {
-          id
-        }
-        commentCount
-        comments {
-          id
-          author {
-            id
-            username
-          }
-          body
-          createdAt
-        }
-        createdAt
-      }
-    }
-  }
-`
-
-export const FIND_POSTS_BY_TAG_NEWEST = gql`
+export const FIND_POSTS_BY_TAG = gql`
   query ($tag: String!, $cursor: ID) {
-    findPostsByTagSortNewest(tag: $tag, cursor: $cursor) {
-      hasMore
-      last
-      posts {
-        id
-        author {
-          id
-          username
-        }
-        title
-        body
-        image
-        tags {
-          id
-          content
-        }
-        likeCount
-        likes {
-          id
-        }
-        commentCount
-        comments {
-          id
-          author {
-            id
-            username
-          }
-          body
-          createdAt
-        }
-        createdAt
-      }
-    }
-  }
-`
-
-export const FIND_POSTS_BY_TAG_TRENDING = gql`
-  query ($tag: String!, $cursor: ID) {
-    findPostsByTagSortTrending(tag: $tag, cursor: $cursor) {
+    findPostsByTag(tag: $tag, cursor: $cursor) {
       hasMore
       last
       posts {
@@ -540,7 +464,7 @@ export const cacheUpdateLogout = (cache, payload) => {
 export const cacheUpdateCreatePost = (cache, payload) => {
   const post = payload?.data?.post
   const postsData = cache.readQuery({ query: GET_ALL_POSTS })
-  const {hasMore, last} = postsData.findAllPosts
+  const { hasMore, last } = postsData.findAllPosts
   cache.writeQuery({
     query: GET_ALL_POSTS,
     data: {
@@ -566,13 +490,15 @@ export const cacheUpdateCreatePost = (cache, payload) => {
 
 export const cacheUpdateDeletePost = (cache, payload, postId) => {
   const data = cache.readQuery({ query: GET_ALL_POSTS })
-  const newPosts = data?.findAllPosts?.posts.filter((post) => post.id !== postId)
+  const newPosts = data?.findAllPosts?.posts.filter(
+    (post) => post.id !== postId
+  )
   cache.writeQuery({
     query: GET_ALL_POSTS,
     data: {
       findAllPosts: {
         ...data?.findAllPosts,
-        posts: newPosts
+        posts: newPosts,
       },
     },
   })

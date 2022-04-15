@@ -1,110 +1,35 @@
-import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { Menu, Item, Button, Select } from 'semantic-ui-react'
-import { useLazyQuery, useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
+import { Menu, Item } from 'semantic-ui-react'
 import InfiniteScroll from 'react-infinite-scroll-component'
-import {
-  FIND_POSTS_BY_TAG_NEWEST,
-  FIND_POSTS_BY_TAG_TRENDING,
-} from '../../graphql'
+import { FIND_POSTS_BY_TAG } from '../../graphql'
 import Post from './Post'
-
-const options = [
-  { key: 'newest', text: 'Newest', value: 'newest' },
-  { key: 'trending', text: 'Trending', value: 'trending' },
-]
+import Spinner from '../utils/Spinner'
 
 const PostsWithTag = (props) => {
   const { tagContent } = useParams()
-  const [sortBy, setSortBy] = useState('newest')
-  const [searched, setSearched] = useState(false)
-  const {
-    loading: allPostsloading,
-    data,
-    fetchMore: fetchMorePosts,
-  } = useQuery(FIND_POSTS_BY_TAG_NEWEST, { variables: { tag: tagContent } })
-  const [
-    findPostsNewest,
-    {
-      loading: loadingNewest,
-      data: postsNewest,
-      fetchMore: fetchMorePostsNewest,
-    },
-  ] = useLazyQuery(FIND_POSTS_BY_TAG_NEWEST, { variables: { tag: tagContent } })
-  const [
-    findPostsTrending,
-    {
-      loading: loadingTrending,
-      data: postsTrending,
-      fetchMore: fetchMorePostsTrending,
-    },
-  ] = useLazyQuery(FIND_POSTS_BY_TAG_TRENDING, {
+  const { loading, data, fetchMore } = useQuery(FIND_POSTS_BY_TAG, {
     variables: { tag: tagContent },
   })
 
-  const tagContentChangeHandler = useCallback(async () => {
-    await findPostsNewest().catch((e) => console.error(e))
-    await findPostsTrending().catch((e) => console.error(e))
-  }, [findPostsNewest, findPostsTrending])
-
-  useEffect(() => {
-    tagContentChangeHandler()
-  }, [tagContent, tagContentChangeHandler])
-
-  const sortHandler = async () => {
-    await findPostsNewest().catch((e) => console.error(e))
-    await findPostsTrending().catch((e) => console.error(e))
-    setSearched(true)
+  const fetchMorePosts = () => {
+    fetchMore({
+      variables: {
+        tag: tagContent,
+        cursor: data.findPostsByTag.last,
+      },
+    })
   }
 
-  const fetchMore = () => {
-    if (!searched) {
-        fetchMorePosts({
-        variables: {
-          tag: tagContent,
-          cursor: data.findPostsByTagSortNewest.last,
-        },
-      })
-    } else {
-      if (sortBy === 'newest') {
-        fetchMorePostsNewest({
-          variables: {
-            tag: tagContent,
-            cursor: postsNewest.findPostsByTagSortNewest.last,
-          },
-        })
-      } else {
-        fetchMorePostsTrending({
-          variables: {
-            tag: tagContent,
-            cursor: postsTrending.findPostsByTagSortTrending.last,
-          },
-        })
-      }
-    }
-  }
-
-  let postsContent
-  if (!(allPostsloading || loadingNewest || loadingTrending)) {
-    let posts = []
-    let hasMore = false
-    if (!searched) {
-      posts = data.findPostsByTagSortNewest.posts
-      hasMore = data.findPostsByTagSortNewest.hasMore
-    } else {
-      if (sortBy === 'newest') {
-        posts = postsNewest.findPostsByTagSortNewest.posts
-        hasMore = postsNewest.findPostsByTagSortNewest.hasMore
-      } else {
-        posts = postsTrending.findPostsByTagSortTrending.posts
-        hasMore = postsTrending.findPostsByTagSortTrending.hasMore
-      }
-    }
+  let postsContent = <Spinner />
+  if (!loading) {
+    const posts = data.findPostsByTag.posts
+    const hasMore = data.findPostsByTag.hasMore
     postsContent = (
       <InfiniteScroll
         dataLength={posts.length}
         hasMore={hasMore}
-        next={fetchMore}
+        next={fetchMorePosts}
         loader={<h4 style={{ textAlign: 'center' }}>Loading...</h4>}
         endMessage={
           <p style={{ textAlign: 'center' }}>
@@ -129,28 +54,10 @@ const PostsWithTag = (props) => {
     )
   }
 
-  const isLoading = allPostsloading || loadingNewest || loadingTrending
   return (
     <>
       <Menu attached="top">
         <Menu.Item content={`Posts tagged with "${tagContent}"`}></Menu.Item>
-        <Menu.Menu position="right">
-          <Select
-            compact
-            options={options}
-            defaultValue="newest"
-            onChange={(event, data) => setSortBy(data.value)}
-          />
-          <Button
-            loading={isLoading}
-            disabled={isLoading}
-            color="blue"
-            type="submit"
-            style={{ margin: 0 }}
-            onClick={sortHandler}
-            content="Sort"
-          />
-        </Menu.Menu>
       </Menu>
       {postsContent}
     </>
