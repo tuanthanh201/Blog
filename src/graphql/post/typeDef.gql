@@ -26,7 +26,7 @@ type Comment {
 type PostQuery {
   posts: [Post]
   hasMore: Boolean
-  last: ID
+  last: String
 }
 extend type Query {
   findPostById(postId: ID!): Post

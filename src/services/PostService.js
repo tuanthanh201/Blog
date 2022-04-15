@@ -27,16 +27,15 @@ class PostService extends DataSource {
 
   getPostQuery(posts) {
     const postsLength = posts.length
-    let last = posts[postsLength - 1]?._id
+    const postIds = posts.map((post) => post._id.toString())
+    let last = postIds[postIds.length - 1]
     let hasMore = false
     if (postsLength === this.limit) {
       posts.pop()
       hasMore = true
-      last = posts[postsLength - 2]?._id
     }
-    last = posts.reduce(
-      (prev, current) =>
-        prev._id.toString() < current._id.toString() ? prev._id : current._id,
+    last = postIds.reduce(
+      (prev, current) => (prev < current ? prev : current),
       last
     )
     return { posts, hasMore, last }
@@ -52,7 +51,7 @@ class PostService extends DataSource {
       if (!cursor && cachedPosts.length !== 0) {
         return this.getPostQuery(cachedPosts.map((x) => JSON.parse(x)))
       }
-      const findOption = cursor ? { _id: { $lt: cursor } } : {}
+      const findOption = cursor ? { _id: { $lte: cursor } } : {}
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
         { _id: -1 },
@@ -83,7 +82,7 @@ class PostService extends DataSource {
       const findOption = cursor
         ? {
             $and: [
-              { _id: { $lt: cursor } },
+              { _id: { $lte: cursor } },
               { $or: [{ title: searchOption }] },
             ],
           }
@@ -105,7 +104,7 @@ class PostService extends DataSource {
       const findOption = cursor
         ? {
             $and: [
-              { _id: { $lt: mongoose.Types.ObjectId(cursor) } },
+              { _id: { $lte: mongoose.Types.ObjectId(cursor) } },
               { title: searchOption },
             ],
           }
@@ -154,7 +153,7 @@ class PostService extends DataSource {
     try {
       const searchOption = { $regex: `${tag}`, $options: 'i' }
       const findOption = cursor
-        ? { $and: [{ _id: { $lt: cursor } }, { 'tags.content': searchOption }] }
+        ? { $and: [{ _id: { $lte: cursor } }, { 'tags.content': searchOption }] }
         : { 'tags.content': searchOption }
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
@@ -172,7 +171,7 @@ class PostService extends DataSource {
       const searchOption = { $regex: `${tag}`, $options: 'i' }
       const findOption = cursor
         ? {
-            $and: [{ _id: { $lt: cursor } }, { 'tags.content': searchOption }],
+            $and: [{ _id: { $lte: cursor } }, { 'tags.content': searchOption }],
           }
         : { 'tags.content': searchOption }
       const aggregations = [
