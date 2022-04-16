@@ -24,7 +24,12 @@ const dataSources = () => ({
 
 const setupApolloServer = async () => {
   const app = express()
-  const redis = createClient()
+  const redis = createClient({
+    socket: {
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
+    },
+  })
   redis.on('connect', () => console.log('Connected to Redis'))
   await redis.connect()
   await redis.flushAll()
