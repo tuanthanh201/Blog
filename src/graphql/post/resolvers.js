@@ -26,26 +26,14 @@ const resolvers = {
     async findAllPosts(_, args, { dataSources }) {
       return await dataSources.postService.findAllPosts(args.cursor)
     },
-    async findPostsByTermSortNewest(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTermSortNewest(
+    async findPostsByTerm(_, args, { dataSources }) {
+      return await dataSources.postService.findPostsByTerm(
         args.term,
         args.cursor
       )
     },
-    async findPostsByTermSortTrending(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTermSortTrending(
-        args.term,
-        args.cursor
-      )
-    },
-    async findPostsByTagSortNewest(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTagSortNewest(
-        args.tag,
-        args.cursor
-      )
-    },
-    async findPostsByTagSortTrending(_, args, { dataSources }) {
-      return await dataSources.postService.findPostsByTagSortTrending(
+    async findPostsByTag(_, args, { dataSources }) {
+      return await dataSources.postService.findPostsByTag(
         args.tag,
         args.cursor
       )

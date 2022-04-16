@@ -1,94 +1,59 @@
 import { useState } from 'react'
 import { useLazyQuery, useQuery } from '@apollo/client'
-import { Button, Input, Item, Select } from 'semantic-ui-react'
+import { Button, Input, Item } from 'semantic-ui-react'
 import InfiniteScroll from 'react-infinite-scroll-component'
+import { FIND_POSTS_BY_TERM, GET_ALL_POSTS } from '../../graphql'
 import Post from './Post'
-import {
-  FIND_POSTS_BY_TERM_NEWEST,
-  FIND_POSTS_BY_TERM_TRENDING,
-  GET_ALL_POSTS,
-} from '../../graphql'
-
-const options = [
-  { key: 'newest', text: 'Newest', value: 'newest' },
-  { key: 'trending', text: 'Trending', value: 'trending' },
-]
+import Spinner from '../utils/Spinner'
 
 const Posts = (props) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState('newest')
   const [searched, setSearched] = useState(false)
+  const [searching, setSearching] = useState(false)
   const {
-    loading: allPostsloading,
-    data,
-    fetchMore: fetchMorePosts,
+    loading,
+    data: allPosts,
+    fetchMore: fetchMoreAllPosts,
   } = useQuery(GET_ALL_POSTS)
   const [
-    findPostsNewest,
-    {
-      loading: findingNewestPosts,
-      data: postsNewest,
-      fetchMore: fetchMorePostsNewest,
-    },
-  ] = useLazyQuery(FIND_POSTS_BY_TERM_NEWEST)
-  const [
-    findPostsTrending,
-    {
-      loading: FindingTrendingPosts,
-      data: postsTrending,
-      fetchMore: fetchMorePostsTrending,
-    },
-  ] = useLazyQuery(FIND_POSTS_BY_TERM_TRENDING)
+    searchPost,
+    { data: searchedPosts, fetchMore: fetchMoreSearchedPosts },
+  ] = useLazyQuery(FIND_POSTS_BY_TERM)
 
   const searchHandler = async () => {
-    await findPostsNewest({
+    setSearching(true)
+    await searchPost({
       variables: { term: searchTerm },
     }).catch((e) => console.error(e))
-    await findPostsTrending({
-      variables: { term: searchTerm },
-    }).catch((e) => console.error(e))
+    setSearching(false)
     setSearched(true)
   }
 
   const fetchMore = () => {
     if (!searched) {
-      fetchMorePosts({ variables: { cursor: data?.findAllPosts.last } })
+      fetchMoreAllPosts({ variables: { cursor: allPosts?.findAllPosts.last } })
     } else {
-      if (sortBy === 'newest') {
-        fetchMorePostsNewest({
-          variables: {
-            term: searchTerm,
-            cursor: postsNewest.findPostsByTermSortNewest.last,
-          },
-        })
-      } else {
-        fetchMorePostsTrending({
-          variables: {
-            term: searchTerm,
-            cursor: postsTrending.findPostsByTermSortTrending.last,
-          },
-        })
-      }
+      fetchMoreSearchedPosts({
+        variables: {
+          term: searchTerm,
+          cursor: searchedPosts.findPostsByTerm.last,
+        },
+      })
     }
   }
 
-  let postsContent
-  if (!(allPostsloading || findingNewestPosts || FindingTrendingPosts)) {
+  let postsContent = <Spinner />
+  if (!(loading || searching)) {
     let posts = []
     let hasMore = false
     if (!searched) {
-      posts = data?.findAllPosts.posts ? data?.findAllPosts.posts : []
-      hasMore = data?.findAllPosts.hasMore
+      posts = allPosts?.findAllPosts.posts ? allPosts?.findAllPosts.posts : []
+      hasMore = allPosts?.findAllPosts.hasMore
     } else {
-      if (sortBy === 'newest') {
-        console.log('NEWEST')
-        posts = postsNewest.findPostsByTermSortNewest.posts
-        hasMore = postsNewest.findPostsByTermSortNewest.hasMore
-      } else {
-        console.log('TRENDING')
-        posts = postsTrending.findPostsByTermSortTrending.posts
-        hasMore = postsTrending.findPostsByTermSortTrending.hasMore
-      }
+      posts = searchedPosts?.findPostsByTerm.posts
+        ? searchedPosts?.findPostsByTerm.posts
+        : []
+      hasMore = searchedPosts?.findPostsByTerm.hasMore
     }
     postsContent = (
       <InfiniteScroll
@@ -120,8 +85,7 @@ const Posts = (props) => {
     )
   }
 
-  const isLoading =
-    allPostsloading || findingNewestPosts || FindingTrendingPosts
+  const isLoading = loading || searching
   return (
     <>
       <Input
@@ -132,11 +96,6 @@ const Posts = (props) => {
         onChange={(e) => setSearchTerm(e.target.value)}
         action>
         <input />
-        <Select
-          options={options}
-          defaultValue="newest"
-          onChange={(event, data) => setSortBy(data.value)}
-        />
         <Button
           type="submit"
           loading={isLoading}

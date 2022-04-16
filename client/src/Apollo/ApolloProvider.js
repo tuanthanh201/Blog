@@ -12,105 +12,71 @@ const httpLink = createHttpLink({
 })
 
 const client = new ApolloClient({
-  cache: new InMemoryCache({typePolicies: {
-    Query: {
-      fields: {
-        findAllPosts: {
-          // Don't cache separate results based on
-          // any of this field's arguments.
-          keyArgs: false,
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          findAllPosts: {
+            // Don't cache separate results based on
+            // any of this field's arguments.
+            keyArgs: false,
 
-          // Concatenate the incoming list items with
-          // the existing list items.
-          merge(existing, incoming) {
-            let posts
-            if (existing?.posts) {
-              posts = [...existing?.posts, ...incoming.posts]
-            } else {
-              posts = [...incoming.posts]
-            }
-            return {
-              ...incoming,
-              posts
-            }
-          },
-        },
-        findPostsByTermSortNewest: {
-          keyArgs: false,
-          merge(existing, incoming) {
-            let posts
-            if (existing?.posts) {
-              posts = [...existing?.posts, ...incoming.posts]
-            } else {
-              posts = [...incoming.posts]
-            }
-            return {
-              ...incoming,
-              posts
-            }
-          },
-        },
-        findPostsByTermSortTrending: {
-          keyArgs: false,
-          merge(existing, incoming) {
-            let posts
-            if (existing?.posts) {
-              posts = [...existing?.posts, ...incoming.posts]
-            } else {
-              posts = [...incoming.posts]
-            }
-            return {
-              ...incoming,
-              posts
-            }
-          },
-        },
-        findPostsByTagSortNewest: {
-          keyArgs: ['tag'],
-          merge(existing, incoming) {
-            let posts
-            if (existing?.posts) {
-              posts = _.cloneDeep(existing.posts);
-            } else {
-              posts = []
-            }
-            const postIds = existing?.posts.map(post => post.__ref)
-            const postsSet = new Set(postIds)
-            for (const post of incoming.posts) {
-              if (!postsSet.has(post.__ref)) {
-                posts.push(post)
+            // Concatenate the incoming list items with
+            // the existing list items.
+            merge(existing, incoming) {
+              let posts
+              if (existing?.posts) {
+                posts = [...existing?.posts, ...incoming.posts]
+              } else {
+                posts = [...incoming.posts]
               }
-            }
-            return {
-              ...incoming,
-              posts
-            }
+              return {
+                ...incoming,
+                posts,
+              }
+            },
+          },
+          findPostsByTerm: {
+            keyArgs: false,
+            merge(existing, incoming) {
+              let posts
+              if (existing?.posts) {
+                posts = [...existing?.posts, ...incoming.posts]
+              } else {
+                posts = [...incoming.posts]
+              }
+              return {
+                ...incoming,
+                posts,
+              }
+            },
+          },
+          findPostsByTag: {
+            keyArgs: ['tag'],
+            merge(existing, incoming) {
+              let posts
+              if (existing?.posts) {
+                posts = _.cloneDeep(existing.posts)
+              } else {
+                posts = []
+              }
+              const postIds = existing?.posts.map((post) => post.__ref)
+              const postsSet = new Set(postIds)
+              for (const post of incoming.posts) {
+                if (!postsSet.has(post.__ref)) {
+                  posts.push(post)
+                }
+              }
+              return {
+                ...incoming,
+                posts,
+              }
+            },
           },
         },
-        findPostsByTagSortTrending: {
-          keyArgs: ['tag'],
-          merge(existing, incoming) {
-            let posts
-            if (existing?.posts) {
-              posts = _.cloneDeep(existing.posts);
-            } else {
-              posts = []
-            }
-            const postIds = existing?.posts.map(post => post.__ref)
-            const postsSet = new Set(postIds)
-            for (const post of incoming.posts) {
-              if (!postsSet.has(post.__ref)) {
-                posts.push(post)
-              }
-            }
-            return {
-              ...incoming,
-              posts
-            }
-          },
-        }
-      }
-    }}}),
+      },
+    },
+  }),
   link: httpLink,
 })
 

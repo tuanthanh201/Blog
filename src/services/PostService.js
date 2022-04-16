@@ -9,8 +9,9 @@ class PostService extends DataSource {
   constructor({ store }) {
     super()
     this.store = store
-    this.limit = 11
+    this.limit = 6
     this.cachedPostsKey = 'allPosts'
+    this.cacheSize = 7
   }
 
   initialize(config) {
@@ -33,11 +34,8 @@ class PostService extends DataSource {
     if (postsLength === this.limit) {
       posts.pop()
       hasMore = true
+      last = postIds[postIds.length - 2]
     }
-    last = postIds.reduce(
-      (prev, current) => (prev < current ? prev : current),
-      last
-    )
     return { posts, hasMore, last }
   }
 
@@ -48,17 +46,42 @@ class PostService extends DataSource {
         0,
         -1
       )
-      if (!cursor && cachedPosts.length !== 0) {
-        return this.getPostQuery(cachedPosts.map((x) => JSON.parse(x)))
-      }
-      const findOption = cursor ? { _id: { $lte: cursor } } : {}
-      const posts = await this.store.postRepo.findManyAndSort(
-        findOption,
-        { _id: -1 },
-        this.limit
+      const cachedPostsLength = await this.context.redis.lLen(
+        this.cachedPostsKey
       )
-      if (!cursor && cachedPosts.length === 0) {
-        const postsToCache = posts.map((post) => JSON.stringify(post))
+      let postsToFetch = this.limit
+      let posts = []
+      if (cachedPostsLength !== 0) {
+        const parsedPosts = cachedPosts.map((x) => JSON.parse(x))
+        let postIndex = parsedPosts.findIndex((post) => post._id === cursor)
+        if (postIndex !== -1) {
+          postIndex = cursor ? postIndex + 1 : 0
+          for (let i = postIndex; i < postIndex + this.limit; i++) {
+            if (i >= cachedPostsLength) {
+              break
+            }
+            posts.push(parsedPosts[i])
+            cursor = parsedPosts[i]._id
+            postsToFetch--
+          }
+        }
+      }
+      if (postsToFetch !== 0) {
+        const findOption = cursor ? { _id: { $lt: cursor } } : {}
+        const fetchedPosts = await this.store.postRepo.findManyAndSort(
+          findOption,
+          { _id: -1 },
+          postsToFetch
+        )
+        posts = posts.concat(fetchedPosts)
+      }
+      if (cachedPostsLength === 0) {
+        let postsToCache = await this.store.postRepo.findManyAndSort(
+          {},
+          { _id: -1 },
+          this.cacheSize
+        )
+        postsToCache = postsToCache.map((post) => JSON.stringify(post))
         await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
       }
       return this.getPostQuery(posts)
@@ -76,13 +99,13 @@ class PostService extends DataSource {
     } catch (error) {}
   }
 
-  async findPostsByTermSortNewest(term, cursor) {
+  async findPostsByTerm(term, cursor) {
     try {
       const searchOption = { $regex: `${term}`, $options: 'i' }
       const findOption = cursor
         ? {
             $and: [
-              { _id: { $lte: cursor } },
+              { _id: { $lt: cursor } },
               { $or: [{ title: searchOption }] },
             ],
           }
@@ -98,116 +121,17 @@ class PostService extends DataSource {
     }
   }
 
-  async findPostsByTermSortTrending(term, cursor) {
-    try {
-      const searchOption = { $regex: `${term}`, $options: 'i' }
-      const findOption = cursor
-        ? {
-            $and: [
-              { _id: { $lte: mongoose.Types.ObjectId(cursor) } },
-              { title: searchOption },
-            ],
-          }
-        : { $or: [{ title: searchOption }] }
-      const aggregations = [
-        { $match: findOption },
-        {
-          $addFields: {
-            popularity: {
-              $divide: [
-                { $size: '$likes' },
-                {
-                  $pow: [
-                    {
-                      $add: [
-                        {
-                          $dateDiff: {
-                            startDate: '$createdAt',
-                            endDate: new Date(),
-                            unit: 'hour',
-                          },
-                        },
-                        2,
-                      ],
-                    },
-                    1.5,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      ]
-      const posts = await this.store.postRepo.findAndSortByAggrField(
-        aggregations,
-        { popularity: -1, _id: -1 },
-        this.limit
-      )
-      return this.getPostQuery(posts)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findPostsByTagSortNewest(tag, cursor) {
+  async findPostsByTag(tag, cursor) {
     try {
       const searchOption = { $regex: `${tag}`, $options: 'i' }
       const findOption = cursor
-        ? { $and: [{ _id: { $lte: cursor } }, { 'tags.content': searchOption }] }
+        ? {
+            $and: [{ _id: { $lt: cursor } }, { 'tags.content': searchOption }],
+          }
         : { 'tags.content': searchOption }
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
         { _id: -1 },
-        this.limit
-      )
-      return this.getPostQuery(posts)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findPostsByTagSortTrending(tag, cursor) {
-    try {
-      const searchOption = { $regex: `${tag}`, $options: 'i' }
-      const findOption = cursor
-        ? {
-            $and: [{ _id: { $lte: cursor } }, { 'tags.content': searchOption }],
-          }
-        : { 'tags.content': searchOption }
-      const aggregations = [
-        {
-          $match: findOption,
-        },
-        {
-          $addFields: {
-            popularity: {
-              $divide: [
-                { $size: '$likes' },
-                {
-                  $pow: [
-                    {
-                      $add: [
-                        {
-                          $dateDiff: {
-                            startDate: '$createdAt',
-                            endDate: new Date(),
-                            unit: 'hour',
-                          },
-                        },
-                        2,
-                      ],
-                    },
-                    1.5,
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      ]
-      const posts = await this.store.postRepo.findAndSortByAggrField(
-        aggregations,
-        { popularity: -1, _id: -1 },
         this.limit
       )
       return this.getPostQuery(posts)
@@ -370,20 +294,30 @@ class PostService extends DataSource {
       // remove post from user's posts
       await this.store.userRepo.save(user)
       // clean up cache is post is cached
-      const cachedPosts = await this.context.redis.lRange(
+      const stringifiedPost = JSON.stringify(post)
+      const removedCachedPost = await this.context.redis.lRem(
         this.cachedPostsKey,
         0,
-        -1
+        stringifiedPost
       )
-      const cachedPostsLength = await this.context.redis.lLen(
-        this.cachedPostsKey
-      )
-      for (let i = 0; i < cachedPostsLength; i++) {
-        const cachedPost = JSON.parse(cachedPosts[i])
-        if (cachedPost._id.toString() === postId) {
-          await this.context.redis.del(this.cachedPostsKey)
-          break
-        }
+      if (removedCachedPost !== 0) {
+        const cachedPosts = await this.context.redis.lRange(
+          this.cachedPostsKey,
+          0,
+          -1
+        )
+        const cachedPostsLength = await this.context.redis.lLen(
+          this.cachedPostsKey
+        )
+        const cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
+        const findOption = { _id: { $lt: cursor } }
+        const fetchedPosts = await this.store.postRepo.findManyAndSort(
+          findOption,
+          { _id: -1 },
+          removedCachedPost
+        )
+        const postsToCache = fetchedPosts.map((post) => JSON.stringify(post))
+        await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
       }
       return 'Post deleted'
     } catch (error) {
