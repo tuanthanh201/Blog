@@ -22,20 +22,13 @@ const resolvers = {
       await dataSources.rateLimitService.rateLimit()
       return await dataSources.userService.updateBio(args)
     },
-    async subscribe(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
-      return await dataSources.userService.subscribe(args.userId)
-    },
     async register(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
       return await dataSources.userService.register(args)
     },
     async login(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
       return await dataSources.userService.login(args)
     },
     async logout(_, __, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
       return await dataSources.userService.logout()
     },
   },
