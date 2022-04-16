@@ -4,25 +4,23 @@ class RateLimitService extends DataSource {
   constructor({ store }) {
     super()
     this.store = store
-    this.interval = 60 * 60 * 1000
-    this.callsPerInterval = 5000
   }
 
   initialize(config) {
     this.context = config.context
   }
 
-  async rateLimit() {
+  async rateLimit({ type, interval, callsPerInterval }) {
     let now = new Date()
     now = now.getTime()
     const ipAddr = this.context.req.ip
-    const key = ipAddr + ':daily'
+    const key = `${ipAddr}:${type}`
     await this.context.redis
-      .zRemRangeByScore(key, 0, now - this.interval)
+      .zRemRangeByScore(key, 0, now - interval)
       .catch((e) => console.log(e))
-    await this.context.redis.expire(key, this.interval)
+    await this.context.redis.expire(key, interval)
     const calls = (await this.context.redis.zCard(key)) + 1
-    if (calls > this.callsPerInterval) {
+    if (calls > callsPerInterval) {
       throw new Error('Maximum number of calls reached')
     }
     await this.context.redis.zAdd(key, { value: now, score: now })

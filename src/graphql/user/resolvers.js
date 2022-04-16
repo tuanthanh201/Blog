@@ -19,7 +19,11 @@ const resolvers = {
   },
   Mutation: {
     async updateBio(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
+      await dataSources.rateLimitService.rateLimit({
+        type: 'updateBio',
+        interval: 60 * 1000,
+        callsPerInterval: 500,
+      })
       return await dataSources.userService.updateBio(args)
     },
     async register(_, args, { dataSources }) {

@@ -35,8 +35,9 @@ const EditPost = (props) => {
     valueBlurHandler: bodyBlurHandler,
     addToInput: addToBody,
   } = useInput((body) => body.trim() !== '', post.body)
-  const [editPost, { loading, data, error }] = useMutation(EDIT_POST)
-  const [uploadImage] = useMutation(UPLOAD_IMAGE)
+  const [editPost, { loading, data, error: editPostError }] =
+    useMutation(EDIT_POST)
+  const [uploadImage, { error: uploadImageError }] = useMutation(UPLOAD_IMAGE)
 
   const imageUploadHandler = async (selectedImages) => {
     setUploadingImages(true)
@@ -93,12 +94,12 @@ const EditPost = (props) => {
   const titleError = titleIsInvalid ? 'Title must not be empty' : undefined
   const bodyError = bodyIsInvalid ? 'Body must not be empty' : undefined
   const formIsValid = titleIsValid && bodyIsValid
-  const errorMessage = error ? error.message : 'Something went wrong'
+  const error = editPostError || uploadImageError
   return (
     <>
       {active === 'edit' && (
         <Segment attached="bottom">
-          <Form success={!!data} error={error}>
+          <Form success={!!data} error={!!error}>
             <Form.Input
               fluid
               required
@@ -156,7 +157,9 @@ const EditPost = (props) => {
                 error={bodyError}
               />
             </div>
-            <Message attached="bottom" style={{paddingTop: '0.5rem', paddingBottom: '0.5rem'}}>
+            <Message
+              attached="bottom"
+              style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
               <a
                 target="_blank"
                 rel="noopener noreferrer"
@@ -165,7 +168,7 @@ const EditPost = (props) => {
               </a>
               {' is supported'}
             </Message>
-            <Button.Group fluid style={{marginTop: '1.5rem'}}>
+            <Button.Group fluid style={{ marginTop: '1.5rem' }}>
               <Button onClick={props.onCancel}>Cancel</Button>
               <Button.Or />
               <Button
@@ -184,7 +187,7 @@ const EditPost = (props) => {
             <Message
               error
               header="Failed to edit post"
-              content={errorMessage}
+              content={error?.message}
             />
           </Form>
         </Segment>

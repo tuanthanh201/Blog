@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery } from '@apollo/client'
-import { Button, Icon, Label, Menu } from 'semantic-ui-react'
+import { Button, Icon, Label, Menu, Message } from 'semantic-ui-react'
 import nProgress from 'nprogress'
 import {
   DELETE_POST,
@@ -29,7 +29,7 @@ const SinglePost = (props) => {
   const { loading, data } = useQuery(GET_POST_BY_ID, {
     variables: { postId },
   })
-  const [likePost, { loading: likeLoading }] = useMutation(LIKE_POST)
+  const [likePost, { loading: likeLoading, error }] = useMutation(LIKE_POST)
   const [deletePost] = useMutation(DELETE_POST)
 
   if (loading || userLoading) {
@@ -130,6 +130,12 @@ const SinglePost = (props) => {
           post={post}
           onCancel={() => setEditMode(false)}
         />
+      )}
+      {error && (
+        <Message error>
+          <Message.Header>Failed to like post</Message.Header>
+          <p>{error.message}</p>
+        </Message>
       )}
       <Button
         as="div"

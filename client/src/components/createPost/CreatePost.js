@@ -41,8 +41,9 @@ const CreatePost = (props) => {
     valueBlurHandler: bodyBlurHandler,
     addToInput: addToBody,
   } = useInput((body) => body.trim() !== '')
-  const [createPost, { loading }] = useMutation(CREATE_POST)
-  const [uploadImage] = useMutation(UPLOAD_IMAGE)
+  const [createPost, { loading, error: createPostError }] =
+    useMutation(CREATE_POST)
+  const [uploadImage, { error: uploadImageError }] = useMutation(UPLOAD_IMAGE)
 
   const imageUploadHandler = async (selectedImages) => {
     setUploadingImages(true)
@@ -103,6 +104,7 @@ const CreatePost = (props) => {
       image: imageBase64,
       tags: formattedTags,
     }
+    let hasError = false
     await createPost({
       variables: { postInput },
       // update(cache, payload) {
@@ -113,9 +115,14 @@ const CreatePost = (props) => {
         { query: GET_ALL_TAGS },
         { query: GET_ME },
       ],
-    }).catch((e) => console.error(e))
+    }).catch((e) => {
+      hasError = true
+      console.error(e)
+    })
+    if (!hasError) {
+      navigate('/')
+    }
     nProgress.done()
-    navigate('/')
   }
 
   if (tagsLoading) {
@@ -125,6 +132,8 @@ const CreatePost = (props) => {
   const titleError = titleIsInvalid ? 'Title must not be empty' : undefined
   const bodyError = bodyIsInvalid ? 'Body must not be empty' : undefined
   const formIsValid = titleIsValid && bodyIsValid
+  const error = createPostError || uploadImageError
+  const hasError = !!error
   return (
     <>
       <Menu attached="top" tabular>
@@ -142,7 +151,7 @@ const CreatePost = (props) => {
 
       {active === 'post' && (
         <Segment attached="bottom">
-          <Form>
+          <Form error={hasError}>
             <Form.Input
               fluid
               required
@@ -188,7 +197,9 @@ const CreatePost = (props) => {
                 error={bodyError}
               />
             </div>
-            <Message attached="bottom" style={{paddingTop: '0.5rem', paddingBottom: '0.5rem'}}>
+            <Message
+              attached="bottom"
+              style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
               <a
                 target="_blank"
                 rel="noopener noreferrer"
@@ -196,6 +207,10 @@ const CreatePost = (props) => {
                 Markdown
               </a>
               {' is supported'}
+            </Message>
+            <Message error>
+              <Message.Header>Failed to post</Message.Header>
+              <p>{error?.message}</p>
             </Message>
             <Form.Button
               fluid

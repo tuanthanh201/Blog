@@ -1,13 +1,13 @@
 import { useMutation } from '@apollo/client'
 import nProgress from 'nprogress'
-import { Button, Comment, Form } from 'semantic-ui-react'
+import { Button, Comment, Form, Message } from 'semantic-ui-react'
 import { CREATE_COMMENT } from '../../graphql'
 import useInput from '../../hooks/useInput'
 import useUser from '../../hooks/useUser'
 import SingleComment from './SingleComment'
 
 const Comments = ({ postId, comments, hideComments }) => {
-  const [addComment] = useMutation(CREATE_COMMENT, {})
+  const [addComment, { error }] = useMutation(CREATE_COMMENT, {})
   const {
     value: body,
     valueIsValid: bodyIsValid,
@@ -37,13 +37,17 @@ const Comments = ({ postId, comments, hideComments }) => {
       ))}
 
       {user && (
-        <Form reply>
+        <Form reply error={error}>
           <Form.TextArea
             error={bodyError}
             value={body}
             onChange={bodyChangeHandler}
             onBlur={bodyBlurHandler}
           />
+          <Message error>
+            <Message.Header>Failed to comment</Message.Header>
+            <p>{error?.message}</p>
+          </Message>
           <Button
             disabled={!formIsValid}
             type="submit"
