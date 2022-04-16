@@ -56,14 +56,6 @@ const resolvers = {
       await dataSources.rateLimitService.rateLimit()
       return await dataSources.postService.createComment(args)
     },
-    async editComment(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
-      return await dataSources.postService.editComment(args)
-    },
-    async deleteComment(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
-      return await dataSources.postService.deleteComment(args)
-    },
     async likePost(_, args, { dataSources }) {
       await dataSources.rateLimitService.rateLimit()
       return await dataSources.postService.likePost(args.postId)

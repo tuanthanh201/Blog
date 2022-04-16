@@ -342,49 +342,6 @@ class PostService extends DataSource {
     }
   }
 
-  async editComment({ postId, commentId, body }) {
-    try {
-      const user = await checkAuth(this.context.req, this.store.userRepo)
-      const post = await this.store.postRepo.findById(postId)
-      const comment = post.comments.find((comment) => comment._id === commentId)
-      if (!comment) {
-        throw new Error('Comment doesn not exist')
-      }
-      if (comment.user !== user._id) {
-        throw new AuthenticationError(
-          "You don't have permission to edit this comment"
-        )
-      }
-      comment.body = body
-      return await this.store.postRepo.save(post)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async deleteComment({ postId, commentId }) {
-    try {
-      const user = await checkAuth(this.context.req, this.store.userRepo)
-      const post = await this.store.postRepo.findById(postId)
-
-      const comment = post.comments.find((comment) => comment._id === commentId)
-      if (!comment) {
-        throw new Error('Comment doesn not exist')
-      }
-      if (comment.user !== user._id) {
-        throw new AuthenticationError(
-          "You don't have permission to delete this comment"
-        )
-      }
-      post.comments = post.comments.filter(
-        (comment) => comment._id !== commentId
-      )
-      return await this.store.postRepo.save(post)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
   async likePost(postId) {
     try {
       const user = await checkAuth(this.context.req, this.store.userRepo)
