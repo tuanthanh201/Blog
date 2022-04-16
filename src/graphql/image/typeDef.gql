@@ -9,6 +9,4 @@ extend type Query {
 }
 extend type Mutation {
   insertImage(image: String!): Image!
-  deleteImageById(imageId: ID!): String
-  deleteImagesByIds(imageIds: [ID]!): String
 }

@@ -12,14 +12,6 @@ const resolvers = {
       await dataSources.rateLimitService.rateLimit()
       return await dataSources.imageService.insertImage(args.image)
     },
-    async deleteImageById(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
-      return await dataSources.imageService.deleteImageById(args.imageId)
-    },
-    async deleteImagesByIds(_, args, { dataSources }) {
-      await dataSources.rateLimitService.rateLimit()
-      return await dataSources.imageService.deleteImagesByIds(args.imageIds)
-    },
   },
 }
 
