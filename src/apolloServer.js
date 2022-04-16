@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const { ApolloServer } = require('apollo-server-express')
-const {createClient} = require('redis')
+const { createClient } = require('redis')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 
@@ -12,12 +12,14 @@ const PostService = require('./services/PostService')
 const TagService = require('./services/TagService')
 const UserService = require('./services/UserService')
 const ImageService = require('./services/ImageService')
+const RateLimitService = require('./services/RateLimitService')
 
 const dataSources = () => ({
   postService: new PostService({ store }),
   tagService: new TagService({ store }),
   userService: new UserService({ store }),
   imageService: new ImageService({ store }),
+  rateLimitService: new RateLimitService({ store }),
 })
 
 const setupApolloServer = async () => {
@@ -53,7 +55,7 @@ const setupApolloServer = async () => {
     context: ({ req, res }) => ({
       req,
       res,
-      redis
+      redis,
     }),
   })
 
@@ -69,25 +71,6 @@ const setupApolloServer = async () => {
       limit: '50mb',
     },
   })
-
-  if (process.env.NODE_ENV === 'production') {
-    const oneHour = 3600000;
-    app.use(
-        express.static(path.resolve(__dirname, '..', 'client', 'build'), {
-            maxAge: oneHour,
-        })
-    );
-    app.get('*', (req, res) => {
-        const filePath = path.resolve(
-            __dirname,
-            '..',
-            'client',
-            'build',
-            'index.html'
-        );
-        res.sendFile(filePath);
-    });
-}
 
   app.listen({ port: process.env.PORT }, () => {
     console.log(`Server is up on port ${process.env.PORT}`)
