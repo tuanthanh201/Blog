@@ -1,11 +1,11 @@
 const { DataSource } = require('apollo-datasource')
 
-class RateLimit extends DataSource {
+class RateLimitService extends DataSource {
   constructor({ store }) {
     super()
     this.store = store
-    this.interval = 24 * 60 * 60 * 1000
-    this.callsPerDay = 150
+    this.interval = 60 * 60 * 1000
+    this.callsPerInterval = 5000
   }
 
   initialize(config) {
@@ -22,11 +22,11 @@ class RateLimit extends DataSource {
       .catch((e) => console.log(e))
     await this.context.redis.expire(key, this.interval)
     const calls = (await this.context.redis.zCard(key)) + 1
-    if (calls > this.callsPerDay) {
+    if (calls > this.callsPerInterval) {
       throw new Error('Maximum number of calls reached')
     }
     await this.context.redis.zAdd(key, { value: now, score: now })
   }
 }
 
-module.exports = RateLimit
+module.exports = RateLimitService

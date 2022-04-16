@@ -12,14 +12,14 @@ const PostService = require('./services/PostService')
 const TagService = require('./services/TagService')
 const UserService = require('./services/UserService')
 const ImageService = require('./services/ImageService')
-const RateLimit = require('./services/RateLimit')
+const RateLimitService = require('./services/RateLimitService')
 
 const dataSources = () => ({
   postService: new PostService({ store }),
   tagService: new TagService({ store }),
   userService: new UserService({ store }),
   imageService: new ImageService({ store }),
-  RateLimit: new RateLimit({ store }),
+  rateLimitService: new RateLimitService({ store }),
 })
 
 const setupApolloServer = async () => {
