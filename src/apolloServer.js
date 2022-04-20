@@ -46,8 +46,7 @@ const setupApolloServer = async () => {
     } catch (error) {
       res.cookie('token', '', {
         httpOnly: true,
-        sameSite: 'none',
-        secure: true,
+        sameSite: 'lax',
         expires: new Date(0),
       })
     }
@@ -71,7 +70,7 @@ const setupApolloServer = async () => {
     path: '/graphql',
     cors: {
       credentials: true,
-      origin: '*',
+      origin: process.env.FRONT_END_URL,
     },
     bodyParserConfig: {
       limit: '50mb',
