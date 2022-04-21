@@ -1,6 +1,5 @@
 const { DataSource } = require('apollo-datasource')
 const { AuthenticationError, UserInputError } = require('apollo-server')
-const mongoose = require('mongoose')
 
 const { checkAuth, validatePostInput } = require('../utils')
 const { uploadBase64Image, deleteImages, getCloudFrontUrl } = require('../S3')
@@ -41,14 +40,13 @@ class PostService extends DataSource {
 
   async findAllPosts(cursor) {
     try {
-      const cachedPosts = await this.context.redis.lRange(
+      const cachedPosts = await this.context.redis.zRange(
         this.cachedPostsKey,
         0,
-        -1
+        -1,
+        { REV: true }
       )
-      const cachedPostsLength = await this.context.redis.lLen(
-        this.cachedPostsKey
-      )
+      const cachedPostsLength = cachedPosts.length
       let postsToFetch = this.limit
       let posts = []
       if (cachedPostsLength !== 0) {
@@ -81,9 +79,14 @@ class PostService extends DataSource {
           { _id: -1 },
           this.cacheSize
         )
-        postsToCache = postsToCache.map((post) => JSON.stringify(post))
+        postsToCache = postsToCache.map((post) => {
+          return {
+            value: JSON.stringify(post),
+            score: post.createdAt.getTime(),
+          }
+        })
         if (postsToCache.length !== 0) {
-          await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+          await this.context.redis.zAdd(this.cachedPostsKey, postsToCache)
         }
       }
       return this.getPostQuery(posts)
@@ -181,16 +184,16 @@ class PostService extends DataSource {
       user.posts.push(newPost._id)
       await this.store.userRepo.save(user)
       // store post into cache
-      const cachedPostsCount = await this.context.redis.lLen(
+      const cachedPostsCount = await this.context.redis.zCard(
         this.cachedPostsKey
       )
       if (cachedPostsCount === this.limit) {
-        await this.context.redis.rPop(this.cachedPostsKey)
+        await this.context.redis.zPopMin(this.cachedPostsKey)
       }
-      await this.context.redis.lPush(
-        this.cachedPostsKey,
-        JSON.stringify(newPost)
-      )
+      await this.context.redis.zAdd(this.cachedPostsKey, {
+        value: JSON.stringify(newPost),
+        score: newPost.createdAt.getTime(),
+      })
       return newPost
     } catch (error) {
       throw new Error(error)
@@ -246,24 +249,17 @@ class PostService extends DataSource {
         post.body = postInput.body
 
         // edit cache
-        const cachedPosts = await this.context.redis.lRange(
+        const timestamp = post.createdAt.getTime()
+        const removedCachedPost = await this.context.redis.zRemRangeByScore(
           this.cachedPostsKey,
-          0,
-          -1
+          timestamp,
+          timestamp
         )
-        const cachedPostsLength = await this.context.redis.lLen(
-          this.cachedPostsKey
-        )
-        for (let i = 0; i < cachedPostsLength; i++) {
-          const cachedPost = JSON.parse(cachedPosts[i])
-          if (cachedPost._id.toString() === post._id.toString()) {
-            await this.context.redis.lSet(
-              this.cachedPostsKey,
-              i,
-              JSON.stringify(post)
-            )
-            break
-          }
+        if (removedCachedPost !== 0) {
+          await this.context.redis.zAdd(this.cachedPostsKey, {
+            value: JSON.stringify(post),
+            score: timestamp,
+          })
         }
         return await this.store.postRepo.save(post)
       } else {
@@ -296,21 +292,20 @@ class PostService extends DataSource {
       // remove post from user's posts
       await this.store.userRepo.save(user)
       // clean up cache is post is cached
-      const stringifiedPost = JSON.stringify(post)
-      const removedCachedPost = await this.context.redis.lRem(
+      const timestamp = post.createdAt.getTime()
+      const removedCachedPost = await this.context.redis.zRemRangeByScore(
         this.cachedPostsKey,
-        0,
-        stringifiedPost
+        timestamp,
+        timestamp
       )
       if (removedCachedPost !== 0) {
-        const cachedPosts = await this.context.redis.lRange(
+        const cachedPosts = await this.context.redis.zRange(
           this.cachedPostsKey,
           0,
-          -1
+          -1,
+          { REV: true }
         )
-        const cachedPostsLength = await this.context.redis.lLen(
-          this.cachedPostsKey
-        )
+        const cachedPostsLength = cachedPosts.length
         const cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
         const findOption = { _id: { $lt: cursor } }
         const fetchedPosts = await this.store.postRepo.findManyAndSort(
@@ -318,9 +313,14 @@ class PostService extends DataSource {
           { _id: -1 },
           removedCachedPost
         )
-        const postsToCache = fetchedPosts.map((post) => JSON.stringify(post))
+        const postsToCache = fetchedPosts.map((post) => {
+          return {
+            value: JSON.stringify(post),
+            score: post.createdAt.getTime(),
+          }
+        })
         if (postsToCache.length !== 0) {
-          await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+          await this.context.redis.zAdd(this.cachedPostsKey, postsToCache)
         }
       }
       return 'Post deleted'
