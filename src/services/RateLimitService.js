@@ -21,13 +21,13 @@ class RateLimitService extends DataSource {
     await this.context.redis
       .zRemRangeByScore(key, 0, now - interval)
       .catch((e) => console.log(e))
-    // redis.expire takes time in seconds, so divide by 1000
-    await this.context.redis.expire(key, interval / 1000)
     const calls = (await this.context.redis.zCard(key)) + 1
     if (calls > callsPerInterval) {
       throw new Error('Maximum number of calls reached')
     }
     await this.context.redis.zAdd(key, { value: now, score: now })
+    // redis.expire takes time in seconds, so divide by 1000
+    await this.context.redis.expire(key, interval / 1000)
   }
 }
 
