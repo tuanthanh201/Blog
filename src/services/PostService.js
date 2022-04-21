@@ -19,6 +19,8 @@ const fieldsOrder = [
   '__v',
 ]
 
+const cacheExpired = (timeLeft) => timeLeft === -1 || timeLeft === -2
+
 class PostService extends DataSource {
   constructor({ store }) {
     super()
@@ -102,11 +104,14 @@ class PostService extends DataSource {
         if (postsToCache.length !== 0) {
           await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
         }
-        await this.context.redis.expire(
-          this.cachedPostsKey,
-          this.cachedPostsExpiration,
-          'NX'
-        )
+        // for some reasons expire options are not supported
+        const timeLeft = await this.context.redis.ttl(this.cachedPostsKey)
+        if (cacheExpired(timeLeft)) {
+          await this.context.redis.expire(
+            this.cachedPostsKey,
+            this.cachedPostsExpiration
+          )
+        }
       }
       return this.getPostQuery(posts)
     } catch (error) {
@@ -213,11 +218,13 @@ class PostService extends DataSource {
         this.cachedPostsKey,
         JSON.stringify(newPost, fieldsOrder)
       )
-      await this.context.redis.expire(
-        this.cachedPostsKey,
-        this.cachedPostsExpiration,
-        'NX'
-      )
+      const timeLeft = await this.context.redis.ttl(this.cachedPostsKey)
+      if (cacheExpired(timeLeft)) {
+        await this.context.redis.expire(
+          this.cachedPostsKey,
+          this.cachedPostsExpiration
+        )
+      }
       return newPost
     } catch (error) {
       throw new Error(error)
