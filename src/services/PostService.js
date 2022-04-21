@@ -9,9 +9,9 @@ class PostService extends DataSource {
   constructor({ store }) {
     super()
     this.store = store
-    this.limit = 6
+    this.limit = 11
     this.cachedPostsKey = 'allPosts'
-    this.cacheSize = 7
+    this.cacheSize = 100
   }
 
   initialize(config) {
@@ -82,7 +82,9 @@ class PostService extends DataSource {
           this.cacheSize
         )
         postsToCache = postsToCache.map((post) => JSON.stringify(post))
-        await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+        if (postsToCache.length !== 0) {
+          await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+        }
       }
       return this.getPostQuery(posts)
     } catch (error) {
@@ -317,7 +319,9 @@ class PostService extends DataSource {
           removedCachedPost
         )
         const postsToCache = fetchedPosts.map((post) => JSON.stringify(post))
-        await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+        if (postsToCache.length !== 0) {
+          await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+        }
       }
       return 'Post deleted'
     } catch (error) {
