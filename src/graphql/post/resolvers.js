@@ -3,11 +3,14 @@ const resolvers = {
     id: (parent) => parent._id || parent.id,
     likeCount: (parent) => parent.likes.length,
     commentCount: (parent) => parent.comments.length,
-    async author(parent, _, { dataSources }) {
-      return await dataSources.userService.findUserById(parent.author)
+    async author(parent, _, { dataSources, userLoader }) {
+      return await userLoader.load(parent.author, dataSources.userService)
     },
-    async tags(parent, _, { dataSources }) {
-      return await dataSources.tagService.findTagsByTagObjs(parent.tags)
+    tags(parent) {
+      return parent.tags.map((tag) => ({
+        id: tag.tagId,
+        content: tag.content,
+      }))
     },
     image(parent, _, { dataSources }) {
       return dataSources.postService.getImageUrl(parent.image)

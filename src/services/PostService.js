@@ -43,6 +43,14 @@ class PostService extends DataSource {
     }
   }
 
+  async findPostsByIds(postIds) {
+    try {
+      return await this.store.postRepo.findMany({ _id: { $in: postIds } })
+    } catch (error) {
+      throw new Error(error)
+    }
+  }
+
   getPostQuery(posts) {
     const postsLength = posts.length
     const postIds = posts.map((post) => post._id.toString())

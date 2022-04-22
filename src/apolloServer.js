@@ -14,6 +14,9 @@ const UserService = require('./services/UserService')
 const ImageService = require('./services/ImageService')
 const RateLimitService = require('./services/RateLimitService')
 
+const PostLoader = require('./graphql/loaders/PostLoader')
+const UserLoader = require('./graphql/loaders/UserLoader')
+
 const dataSources = () => ({
   postService: new PostService({ store }),
   tagService: new TagService({ store }),
@@ -61,6 +64,8 @@ const setupApolloServer = async () => {
       req,
       res,
       redis,
+      postLoader: PostLoader(dataSources().postService),
+      userLoader: UserLoader(dataSources().userService),
     }),
   })
 
