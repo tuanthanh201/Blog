@@ -7,7 +7,7 @@ import {
 import _ from 'lodash'
 
 const httpLink = createHttpLink({
-  uri: 'http://graphql.my-blog-247.com:4000/graphql',
+  uri: 'https://graphql.my-blog-247.com/graphql',
   credentials: 'include',
 })
 

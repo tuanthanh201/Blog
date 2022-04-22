@@ -8,7 +8,6 @@ const Post = (props) => {
   const {
     id: postId,
     title,
-    // body,
     author: { id: userId, username },
     image,
     tags,
@@ -17,8 +16,6 @@ const Post = (props) => {
   } = props
   const imageSrc = image ? image : emptyImage
 
-  // let content = body.split(' ', 50).join(' ')
-  // content = content.length < body.length ? (content += '...') : content
   return (
     <Item>
       <Item.Image src={imageSrc} as={Link} to={`/posts/${postId}`} />
@@ -37,18 +34,6 @@ const Post = (props) => {
           </p>
           <p>{getDate(createdAt)}</p>
         </Item.Meta>
-        {/* <Item.Description>
-          <Highlighter
-            searchWords={[searchTerm]}
-            textToHighlight={body}
-            autoEscape
-          />
-          <ReactMarkdown
-            children={content}
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
-          />
-        </Item.Description> */}
         <Item.Extra>
           {tags.map((tag) => (
             <Label
