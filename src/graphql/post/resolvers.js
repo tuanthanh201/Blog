@@ -18,8 +18,8 @@ const resolvers = {
   },
   Comment: {
     id: (parent) => parent._id || parent.id,
-    async author(parent, _, { dataSources }) {
-      return await dataSources.userService.findUserById(parent.author)
+    async author(parent, _, { dataSources, userLoader }) {
+      return await userLoader.load(parent.author, dataSources.userService)
     },
   },
   Query: {
