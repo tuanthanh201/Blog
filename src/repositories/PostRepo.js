@@ -49,19 +49,13 @@ const findMany = async (cond) => {
   }
 }
 
-const findManyAndSort = async (findOptions, sortOptions, limitOptions) => {
+const findManyAndSort = async (
+  findOptions = {},
+  sortOptions = {},
+  limitOptions = 0
+) => {
   try {
     return await Post.find(findOptions).sort(sortOptions).limit(limitOptions)
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-const findAndSortByAggrField = async (aggregations, sortOptions, limitOptions) => {
-  try {
-    return await Post.aggregate(aggregations)
-      .sort(sortOptions)
-      .limit(limitOptions)
   } catch (error) {
     throw new Error(error)
   }
@@ -91,14 +85,6 @@ const deleteById = async (id) => {
   }
 }
 
-const populate = async (post, query) => {
-  try {
-    return await user.populate(query).execPopulate()
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
 module.exports = {
   insert,
   insertMany,
@@ -110,6 +96,4 @@ module.exports = {
   findAll,
   updateById,
   deleteById,
-  populate,
-  findAndSortByAggrField,
 }

@@ -1,7 +1,5 @@
 const path = require('path')
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
-// const fs = require('fs')
-// const util = require('util')
 const S3 = require('aws-sdk/clients/s3')
 const { v4: uuidv4 } = require('uuid')
 
@@ -51,8 +49,6 @@ const deleteImages = (awsKeys) => {
   }
   return s3.deleteObjects(deleteParams).promise()
 }
-
-// const unLinkFile = util.promisify(fs.unlink)
 
 const getCloudFrontUrl = (awsKey) => {
   return `https://${cloudFrontUrl}/${awsKey}`

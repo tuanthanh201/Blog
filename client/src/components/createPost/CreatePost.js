@@ -107,9 +107,6 @@ const CreatePost = (props) => {
     let hasError = false
     await createPost({
       variables: { postInput },
-      // update(cache, payload) {
-      //   cacheUpdateCreatePost(cache, payload)
-      // },
       refetchQueries: [
         { query: GET_ALL_POSTS },
         { query: GET_ALL_TAGS },

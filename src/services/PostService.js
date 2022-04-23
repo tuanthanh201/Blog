@@ -45,7 +45,10 @@ class PostService extends DataSource {
 
   async findPostsByIds(postIds) {
     try {
-      return await this.store.postRepo.findMany({ _id: { $in: postIds } })
+      return await this.store.postRepo.findManyAndSort(
+        { $in: postIds },
+        { _id: -1 }
+      )
     } catch (error) {
       throw new Error(error)
     }
@@ -112,7 +115,6 @@ class PostService extends DataSource {
         if (postsToCache.length !== 0) {
           await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
         }
-        // for some reasons expire options are not supported
         const timeLeft = await this.context.redis.ttl(this.cachedPostsKey)
         if (cacheExpired(timeLeft)) {
           await this.context.redis.expire(
@@ -125,15 +127,6 @@ class PostService extends DataSource {
     } catch (error) {
       throw new Error(error)
     }
-  }
-
-  async findPostsByAuthor(authorId) {
-    try {
-      return await this.store.postRepo.findManyAndSort(
-        { author: authorId },
-        { _id: -1 }
-      )
-    } catch (error) {}
   }
 
   async findPostsByTerm(term, cursor) {

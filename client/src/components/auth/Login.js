@@ -50,11 +50,6 @@ const Login = (props) => {
     nProgress.done()
   }
 
-  // TODO: decide whether to return this or use the provided loading state :?
-  // if (loading) {
-  //   return <Spinner />
-  // }
-
   const emailError = emailIsInvalid ? 'Email must be a valid' : undefined
   const passwordError = passwordIsInvalid
     ? 'Password must be at least 8 characters long'

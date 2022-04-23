@@ -1,7 +1,6 @@
 import moment from 'moment'
 
 const getDate = (dateString) => {
-  // check if date is 12h ago
   const date = parseInt(dateString, 10)
   const twentyFourHrInMs = 12 * 60 * 60 * 1000
 

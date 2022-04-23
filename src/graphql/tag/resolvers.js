@@ -3,7 +3,6 @@ const resolvers = {
     async findTagById(_, args, { dataSources }) {
       return await dataSources.tagService.findTagById(args.tagId)
     },
-    // TODO: check this ._.
     async findTagsByContent(_, args, { dataSources }) {
       return await dataSources.tagService.findTagsByContent(args.content)
     },
