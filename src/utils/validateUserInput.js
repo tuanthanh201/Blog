@@ -15,13 +15,8 @@ const validateUserInput = (args) => {
       throw new UserInputError('Email must be a valid email')
     }
   }
-  if (password !== undefined) {
-    if (password.trim() === '') {
-      throw new UserInputError('Password must not be empty')
-    }
-    if (password.length < 8) {
-      throw new UserInputError('Password must contain at least 8 characters')
-    }
+  if (password !== undefined && password.length < 8) {
+    throw new UserInputError('Password must contain at least 8 characters')
   }
 }
 
