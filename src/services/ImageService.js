@@ -12,22 +12,6 @@ class ImageService extends DataSource {
     this.context = config.context
   }
 
-  async findImageById(imageId) {
-    try {
-      return await this.store.imageRepo.findById(imageId)
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
-  async findImagesByIds(imageIds) {
-    try {
-      return await this.store.imageRepo.findMany({ _id: { $in: imageIds } })
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
   async insertImage(image) {
     try {
       const { Key } = await uploadBase64Image(image)

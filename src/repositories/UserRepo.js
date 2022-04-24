@@ -10,14 +10,6 @@ const insert = async (userData) => {
   }
 }
 
-const insertMany = async (users) => {
-  try {
-    return await User.insertMany(users)
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
 const save = async (user) => {
   try {
     return await user.save()
@@ -50,14 +42,6 @@ const findMany = async(cond)=> {
   }
 }
 
-const findAll = async () => {
-  try {
-    return await User.find()
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
 const updateById = async (id, data) => {
   try {
     return await User.findByIdAndUpdate(id, data, { new: true })
@@ -68,11 +52,9 @@ const updateById = async (id, data) => {
 
 module.exports = {
   insert,
-  insertMany,
   save,
   findById,
   findMany,
   findOne,
-  findAll,
   updateById,
 }

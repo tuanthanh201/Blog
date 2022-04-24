@@ -15,9 +15,6 @@ const resolvers = {
     async findUserById(parent, args, { dataSources }) {
       return await dataSources.userService.findUserById(args.userId)
     },
-    async findAllUsers(parent, __, { dataSources }) {
-      return await dataSources.userService.findAllUsers()
-    },
     async getMe(parent, __, { dataSources }) {
       return await dataSources.userService.getMe()
     },

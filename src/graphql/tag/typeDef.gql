@@ -4,8 +4,5 @@ type Tag {
   createdAt: String!
 }
 extend type Query {
-  findTagById(tagId: ID!): Tag
-  findTagsByContent(content: String!): [Tag]
-  findTagByContentExact(content: String!): [Tag]
   findAllTags: [Tag]
 }

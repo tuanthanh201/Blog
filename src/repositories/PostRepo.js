@@ -9,14 +9,6 @@ const insert = async (postData) => {
   }
 }
 
-const insertMany = async (posts) => {
-  try {
-    return await Post.insertMany(posts)
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
 const save = async (post) => {
   try {
     return await post.save()
@@ -28,14 +20,6 @@ const save = async (post) => {
 const findById = async (id) => {
   try {
     return await Post.findById(id)
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-const findOne = async (cond) => {
-  try {
-    return await Post.findOne(cond)
   } catch (error) {
     throw new Error(error)
   }
@@ -60,23 +44,6 @@ const findManyAndSort = async (
     throw new Error(error)
   }
 }
-
-const findAll = async () => {
-  try {
-    return await Post.find()
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
-const updateById = async (id, data) => {
-  try {
-    return await Post.findByIdAndUpdate(id, data, { new: true })
-  } catch (error) {
-    throw new Error(error)
-  }
-}
-
 const deleteById = async (id) => {
   try {
     return await Post.findByIdAndDelete(id)
@@ -87,13 +54,9 @@ const deleteById = async (id) => {
 
 module.exports = {
   insert,
-  insertMany,
   save,
   findById,
-  findOne,
   findMany,
   findManyAndSort,
-  findAll,
-  updateById,
   deleteById,
 }

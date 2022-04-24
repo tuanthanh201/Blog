@@ -3,10 +3,6 @@ type Image {
   url: String!
   createdAt: String!
 }
-extend type Query {
-  findImageById(imageId: ID!): Image!
-  findImagesByIds(imageIds: [ID]!): [Image]!
-}
 extend type Mutation {
   insertImage(image: String!): Image!
 }

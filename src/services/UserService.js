@@ -45,14 +45,6 @@ class UserService extends DataSource {
     }
   }
 
-  async findAllUsers() {
-    try {
-      return await this.store.userRepo.findAll()
-    } catch (error) {
-      throw new Error(error)
-    }
-  }
-
   async getMe() {
     try {
       const parsedToken = this.context.req.parsedToken
