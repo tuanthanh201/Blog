@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/index",
     "seed-data": "node src/db/insertData",
-    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client"
+    "test:unit": "jest --verbose ./src/services/__test__"
   },
   "author": "",
   "license": "ISC",
@@ -30,7 +29,9 @@
     "path": "^0.12.7",
     "redis": "^4.0.6",
     "styled-components": "^5.3.3",
-    "utils": "^0.3.1",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "jest": "^27.5.1"
   }
 }
