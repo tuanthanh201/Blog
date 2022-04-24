@@ -37,7 +37,7 @@ class UserService extends DataSource {
     }
   }
 
-  async FindUsersByIds(userIds) {
+  async findUsersByIds(userIds) {
     try {
       return await this.store.userRepo.findMany({ _id: { $in: userIds } })
     } catch (error) {

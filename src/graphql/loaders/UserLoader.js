@@ -2,7 +2,7 @@ const DataLoader = require('dataloader')
 
 const UserLoader = (userService) =>
   new DataLoader(async (userIds) => {
-    const users = await userService.FindUsersByIds(userIds)
+    const users = await userService.findUsersByIds(userIds)
 
     const userMap = {}
     users.forEach((user) => {
