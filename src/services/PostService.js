@@ -78,7 +78,11 @@ class PostService extends DataSource {
       let postsToFetch = this.limit
       let posts = []
       if (cachedPostsLength !== 0) {
-        const parsedPosts = cachedPosts.map((post) => JSON.parse(post))
+        const parsedPosts = cachedPosts.map((post) => {
+          let parsedPost = JSON.parse(post)
+          parsedPost.createdAt = new Date(parsedPost.createdAt)
+          return parsedPost
+        })
         let postIndex = parsedPosts.findIndex((post) => post._id === cursor)
         let postIsCached = false
         if (postIndex !== -1) {
