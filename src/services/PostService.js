@@ -74,16 +74,21 @@ class PostService extends DataSource {
         0,
         -1
       )
-      const cachedPostsLength = await this.context.redis.lLen(
-        this.cachedPostsKey
-      )
+      const cachedPostsLength = cachedPosts.length
       let postsToFetch = this.limit
       let posts = []
       if (cachedPostsLength !== 0) {
-        const parsedPosts = cachedPosts.map((x) => JSON.parse(x))
+        const parsedPosts = cachedPosts.map((post) => JSON.parse(post))
         let postIndex = parsedPosts.findIndex((post) => post._id === cursor)
+        let postIsCached = false
         if (postIndex !== -1) {
-          postIndex = cursor ? postIndex + 1 : 0
+          postIsCached = true
+          postIndex++
+        } else if (postIndex === -1 && !cursor) {
+          postIsCached = true
+          postIndex = 0
+        }
+        if (postIsCached) {
           for (let i = postIndex; i < postIndex + this.limit; i++) {
             if (i >= cachedPostsLength) {
               break
@@ -286,9 +291,7 @@ class PostService extends DataSource {
           0,
           -1
         )
-        const cachedPostsLength = await this.context.redis.lLen(
-          this.cachedPostsKey
-        )
+        const cachedPostsLength = cachedPosts.length
         for (let i = 0; i < cachedPostsLength; i++) {
           const cachedPost = JSON.parse(cachedPosts[i])
           if (cachedPost._id.toString() === post._id.toString()) {
@@ -343,9 +346,7 @@ class PostService extends DataSource {
           0,
           -1
         )
-        const cachedPostsLength = await this.context.redis.lLen(
-          this.cachedPostsKey
-        )
+        const cachedPostsLength = cachedPosts.length
         const cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
         const findOption = { _id: { $lt: cursor } }
         const fetchedPosts = await this.store.postRepo.findManyAndSort(
