@@ -148,7 +148,7 @@ class PostService extends DataSource {
               { $or: [{ title: searchOption }] },
             ],
           }
-        : { $or: [{ title: searchOption }] }
+        : { title: searchOption }
       const posts = await this.store.postRepo.findManyAndSort(
         findOption,
         { _id: -1 },
@@ -213,15 +213,18 @@ class PostService extends DataSource {
           }
         }
       }
+
+      // insert post into database
       newPost = await this.store.postRepo.insert(newPost)
       // save post to user
       user.posts.push(newPost._id)
       await this.store.userRepo.save(user)
+
       // store post into cache
       const cachedPostsCount = await this.context.redis.lLen(
         this.cachedPostsKey
       )
-      if (cachedPostsCount === this.limit) {
+      if (cachedPostsCount === this.cacheSize) {
         await this.context.redis.rPop(this.cachedPostsKey)
       }
       await this.context.redis.lPush(
