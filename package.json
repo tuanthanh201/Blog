@@ -7,7 +7,8 @@
     "seed-data": "node src/db/insertData",
     "server:dev": "env-cmd -e development nodemon --ignore client --ext js,gql src/index",
     "server:test": "env-cmd -e test nodemon --ignore client --ext js,gql src/index",
-    "test:unit": "jest unit --verbose"
+    "test:unit": "jest unit --verbose",
+    "test:integration": "env-cmd -e test jest int --verbose"
   },
   "author": "",
   "license": "ISC",
@@ -21,7 +22,6 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dataloader": "^2.1.0",
-    "env-cmd": "^10.1.0",
     "fs": "0.0.1-security",
     "graphql": "^16.3.0",
     "jsonwebtoken": "^8.5.1",
@@ -33,6 +33,9 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@apollo/client": "^3.6.0",
+    "cross-fetch": "^3.1.5",
+    "env-cmd": "^10.1.0",
     "jest": "^27.5.1"
   }
 }

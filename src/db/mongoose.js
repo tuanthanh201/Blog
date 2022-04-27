@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const connectToDB = () => {
-  return mongoose
+  mongoose
     .connect(process.env.MONGO_CONNECTION_STRING, {
       useUnifiedTopology: true,
       useNewUrlParser: true,
@@ -12,6 +12,7 @@ const connectToDB = () => {
     .catch(() => {
       console.log('Failed to connect to MongoDB')
     })
+  return mongoose
 }
 
 module.exports = connectToDB
