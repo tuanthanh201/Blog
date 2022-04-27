@@ -55,6 +55,7 @@ describe('Register', () => {
 
     expect(resultUser.username).toBe(user.username)
     expect(resultUser.email).toBe(user.email)
+    expect(resultUser.posts).toStrictEqual([])
     expect(resultUser.createdAt).not.toBe(undefined)
     expect(resultUser.password).toBe(undefined)
   })
@@ -97,5 +98,86 @@ describe('Register', () => {
         variables: { registerInput },
       })
     }).rejects.toThrow('Username already exists')
+  })
+})
+
+describe('Login', () => {
+  describe('Login', () => {
+    it('Login successfully', async () => {
+      const user = {
+        username: 'james',
+        email: 'james@example.com',
+        password: '12345678',
+      }
+      const loginInput = {
+        email: user.email,
+        password: user.password,
+      }
+      await client.mutate({
+        mutation: REGISTER,
+        variables: { registerInput: { ...user } },
+      })
+
+      const res = await client.mutate({
+        mutation: LOGIN,
+        variables: { loginInput },
+      })
+
+      const resultUser = { ...res.data.login }
+
+      expect(resultUser.username).toBe(user.username)
+      expect(resultUser.email).toBe(user.email)
+      expect(resultUser.posts).toStrictEqual([])
+      expect(resultUser.createdAt).not.toBe(undefined)
+      expect(resultUser.password).toBe(undefined)
+    })
+
+    it('Login fail - wrong password', async () => {
+      const user = {
+        username: 'james',
+        email: 'james@example.com',
+        password: '12345678',
+      }
+      await client.mutate({
+        mutation: REGISTER,
+        variables: { registerInput: { ...user } },
+      })
+
+      await expect(async () => {
+        await client.mutate({
+          mutation: LOGIN,
+          variables: {
+            loginInput: {
+              email: user.email,
+              password: 'wrong password',
+            },
+          },
+        })
+      }).rejects.toThrow('Invalid credentials')
+    })
+
+    it('Login fail - wrong email', async () => {
+      const user = {
+        username: 'james',
+        email: 'james@example.com',
+        password: '12345678',
+      }
+      await client.mutate({
+        mutation: REGISTER,
+        variables: { registerInput: { ...user } },
+      })
+
+      await expect(async () => {
+        await client.mutate({
+          mutation: LOGIN,
+          variables: {
+            loginInput: {
+              email: 'wrongemail@example.com',
+              password: user.password,
+            },
+          },
+        })
+      }).rejects.toThrow('Invalid credentials')
+    })
   })
 })
