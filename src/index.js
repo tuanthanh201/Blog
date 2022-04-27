@@ -1,4 +1,3 @@
-require('dotenv').config()
 const connectToDB = require('./db/mongoose')
 const setupApolloServer = require('./apolloServer')
 

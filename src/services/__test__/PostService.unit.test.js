@@ -1013,3 +1013,221 @@ describe('PostService.deletePost', () => {
     expect(imageFunctions.deleteImages).toHaveBeenLastCalledWith([post.image])
   })
 })
+
+describe('PostService.createComment', () => {
+  it('Fails if post does not exist', async () => {
+    // given
+    args = {
+      postId: '1',
+      body: 'New comment',
+    }
+    const user = {
+      _id: '1',
+      username: 'john',
+      email: 'john@example.com',
+      posts: [],
+    }
+    mockStore.userRepo.findById.mockReturnValueOnce(user)
+    mockStore.postRepo.findById.mockReturnValueOnce(undefined)
+
+    // then
+    await expect(async () => {
+      await postService.createComment(args)
+    }).rejects.toThrow("Post doesn't exist")
+  })
+
+  it('Fails if comment body is empty', async () => {
+    // given
+    args = {
+      postId: '1',
+      body: '',
+    }
+    const post = {
+      _id: '1',
+      author: '2',
+      title: 'Title',
+      body: 'Body',
+      image: 'someKey',
+      tags: [{ tagId: '3', content: 'lemon' }],
+      comments: [],
+    }
+    const user = {
+      _id: '1',
+      username: 'john',
+      email: 'john@example.com',
+      posts: [],
+    }
+    mockStore.userRepo.findById.mockReturnValueOnce(user)
+    mockStore.postRepo.findById.mockReturnValueOnce(post)
+
+    // then
+    await expect(async () => {
+      await postService.createComment(args)
+    }).rejects.toThrow('Comment must not be empty')
+  })
+
+  it('Adds comment to post', async () => {
+    // given
+    args = {
+      postId: '1',
+      body: 'New comment',
+    }
+    const post = {
+      _id: '1',
+      author: '2',
+      title: 'Title',
+      body: 'Body',
+      image: 'someKey',
+      tags: [{ tagId: '3', content: 'lemon' }],
+      comments: [
+        { author: '3', body: 'A random comment' },
+        { author: '2', body: 'Another random comment' },
+      ],
+    }
+    const expectedPost = {
+      _id: '1',
+      author: '2',
+      title: 'Title',
+      body: 'Body',
+      image: 'someKey',
+      tags: [{ tagId: '3', content: 'lemon' }],
+      comments: [
+        { author: '3', body: 'A random comment' },
+        { author: '2', body: 'Another random comment' },
+        { author: '1', body: 'New comment' },
+      ],
+    }
+    const user = {
+      _id: '1',
+      username: 'john',
+      email: 'john@example.com',
+      posts: [],
+    }
+    mockStore.userRepo.findById.mockReturnValueOnce(user)
+    mockStore.postRepo.findById.mockReturnValueOnce(post)
+
+    // when
+    await postService.createComment(args)
+
+    // then
+    expect(mockStore.postRepo.save).toHaveBeenLastCalledWith(expectedPost)
+  })
+})
+
+describe('PostService.likePost', () => {
+  it('Fails if post does not exist', async () => {
+    // given
+    args = {
+      postId: '1',
+    }
+    const user = {
+      _id: '1',
+      username: 'john',
+      email: 'john@example.com',
+      posts: [],
+    }
+    mockStore.userRepo.findById.mockReturnValueOnce(user)
+    mockStore.postRepo.findById.mockReturnValueOnce(undefined)
+
+    // then
+    await expect(async () => {
+      await postService.likePost(args)
+    }).rejects.toThrow('Post does not exist')
+  })
+
+  it('Unlikes post if user already liked post', async () => {
+    // given
+    args = {
+      postId: '1',
+      body: 'New comment',
+    }
+    const post = {
+      _id: '1',
+      author: '2',
+      title: 'Title',
+      body: 'Body',
+      image: 'someKey',
+      tags: [{ tagId: '3', content: 'lemon' }],
+      comments: [
+        { author: '3', body: 'A random comment' },
+        { author: '2', body: 'Another random comment' },
+      ],
+      likes: [{ _id: '1' }, { _id: '2' }],
+    }
+    const expectedPost = {
+      _id: '1',
+      author: '2',
+      title: 'Title',
+      body: 'Body',
+      image: 'someKey',
+      tags: [{ tagId: '3', content: 'lemon' }],
+      comments: [
+        { author: '3', body: 'A random comment' },
+        { author: '2', body: 'Another random comment' },
+      ],
+      likes: [{ _id: '2' }],
+    }
+    const user = {
+      _id: '1',
+      username: 'john',
+      email: 'john@example.com',
+      posts: [],
+    }
+    mockStore.userRepo.findById.mockReturnValueOnce(user)
+    mockStore.postRepo.findById.mockReturnValueOnce(post)
+
+    // when
+    await postService.likePost(args)
+
+    // then
+    expect(mockStore.postRepo.save).toHaveBeenLastCalledWith(expectedPost)
+  })
+
+  it('Likes post if user has not liked it', async () => {
+    // given
+    args = {
+      postId: '1',
+      body: 'New comment',
+    }
+    const post = {
+      _id: '1',
+      author: '2',
+      title: 'Title',
+      body: 'Body',
+      image: 'someKey',
+      tags: [{ tagId: '3', content: 'lemon' }],
+      comments: [
+        { author: '3', body: 'A random comment' },
+        { author: '2', body: 'Another random comment' },
+      ],
+      likes: [{ _id: '2' }],
+    }
+    const expectedPost = {
+      _id: '1',
+      author: '2',
+      title: 'Title',
+      body: 'Body',
+      image: 'someKey',
+      tags: [{ tagId: '3', content: 'lemon' }],
+      comments: [
+        { author: '3', body: 'A random comment' },
+        { author: '2', body: 'Another random comment' },
+      ],
+      likes: [{ _id: '2' }, '1'],
+    }
+    const user = {
+      _id: '1',
+      username: 'john',
+      email: 'john@example.com',
+      posts: [],
+    }
+    mockStore.userRepo.findById.mockReturnValueOnce(user)
+    mockStore.postRepo.findById.mockReturnValueOnce(post)
+
+    // when
+    await postService.likePost(args)
+
+    // then
+    expect(mockStore.postRepo.save).toHaveBeenLastCalledWith(expectedPost)
+  })
+})

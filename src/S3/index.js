@@ -1,5 +1,3 @@
-const path = require('path')
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
 const S3 = require('aws-sdk/clients/s3')
 const { v4: uuidv4 } = require('uuid')
 
