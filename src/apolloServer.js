@@ -1,4 +1,3 @@
-require('dotenv').config()
 const express = require('express')
 const { ApolloServer } = require('apollo-server-express')
 const { createClient } = require('redis')
@@ -35,7 +34,6 @@ const setupApolloServer = async () => {
   })
   redis.on('connect', () => console.log('Connected to Redis'))
   await redis.connect()
-  await redis.flushAll()
 
   app.use(cookieParser())
 
