@@ -21,7 +21,7 @@ const PostLoader = (postService) =>
     const posts = await postService.findPostsByIds(postIds)
 
     const postMap = groupPostsByAuthor(posts)
-    return authors.map((author) => postMap[author])
+    return authors.map((author) => postMap[author] ?? [])
   })
 
 module.exports = PostLoader
