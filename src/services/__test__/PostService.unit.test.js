@@ -4,9 +4,6 @@ jest.mock('../../S3', () => ({
   deleteImages: jest.fn(),
 }))
 const imageFunctions = require('../../S3')
-// jest.mock('../../utils/checkAuth', () => ({
-//   checkAuth: () =>
-// }))
 
 const PostService = require('../PostService')
 
@@ -92,11 +89,7 @@ describe('PostService.findPostById', () => {
 describe('PostService.findPostsByIds', () => {
   it('Find posts by ids', async () => {
     // given
-    const expectedPosts = [
-      { id: 1, title: 'First post' },
-      { id: 2, title: 'Second post' },
-      { id: 3, title: 'Third post' },
-    ]
+    const expectedPosts = [{ id: 1 }, { id: 2 }, { id: 3 }]
     const postIds = expectedPosts.map((post) => post.id)
     mockStore.postRepo.findManyAndSort.mockReturnValueOnce(expectedPosts)
 
@@ -112,25 +105,26 @@ describe('PostService.findPostsByIds', () => {
   })
 })
 
+const getTestStoredPosts = () => [
+  { _id: '1', title: 'Post 1', createdAt: new Date(1650911154090) },
+  { _id: '2', title: 'Post 2', createdAt: new Date(1650911154090) },
+  { _id: '3', title: 'Post 3', createdAt: new Date(1650911154090) },
+  { _id: '4', title: 'Post 4', createdAt: new Date(1650911154090) },
+  { _id: '5', title: 'Post 5', createdAt: new Date(1650911154090) },
+  { _id: '6', title: 'Post 6', createdAt: new Date(1650911154090) },
+  { _id: '7', title: 'Post 7', createdAt: new Date(1650911154090) },
+  { _id: '8', title: 'Post 8', createdAt: new Date(1650911154090) },
+  { _id: '9', title: 'Post 9', createdAt: new Date(1650911154090) },
+  { _id: '10', title: 'Post 10', createdAt: new Date(1650911154090) },
+  { _id: '11', title: 'Post 11', createdAt: new Date(1650911154090) },
+  { _id: '12', title: 'Post 12', createdAt: new Date(1650911154090) },
+]
 describe('PostService.findAllPosts', () => {
   // hasMore: a Boolean to tell whether the batch is the last batch
   // last: the id of the last post in batch
   it('Fetches posts from cache (no cursor)', async () => {
     // given
-    const parsedPosts = [
-      { _id: '1', title: 'Post 1', createdAt: new Date(1650911154090) },
-      { _id: '2', title: 'Post 2', createdAt: new Date(1650911154090) },
-      { _id: '3', title: 'Post 3', createdAt: new Date(1650911154090) },
-      { _id: '4', title: 'Post 4', createdAt: new Date(1650911154090) },
-      { _id: '5', title: 'Post 5', createdAt: new Date(1650911154090) },
-      { _id: '6', title: 'Post 6', createdAt: new Date(1650911154090) },
-      { _id: '7', title: 'Post 7', createdAt: new Date(1650911154090) },
-      { _id: '8', title: 'Post 8', createdAt: new Date(1650911154090) },
-      { _id: '9', title: 'Post 9', createdAt: new Date(1650911154090) },
-      { _id: '10', title: 'Post 10', createdAt: new Date(1650911154090) },
-      { _id: '11', title: 'Post 11', createdAt: new Date(1650911154090) },
-      { _id: '12', title: 'Post 12', createdAt: new Date(1650911154090) },
-    ]
+    const parsedPosts = getTestStoredPosts()
     const cachedPosts = parsedPosts.map((post) =>
       JSON.stringify(post, fieldsOrder)
     )
@@ -149,20 +143,7 @@ describe('PostService.findAllPosts', () => {
   })
 
   it('Fetches posts from cache (cursor exists and enough posts in cache)', async () => {
-    const parsedPosts = [
-      { _id: '1', title: 'Post 1', createdAt: new Date(1650911154090) },
-      { _id: '2', title: 'Post 2', createdAt: new Date(1650911154090) },
-      { _id: '3', title: 'Post 3', createdAt: new Date(1650911154090) },
-      { _id: '4', title: 'Post 4', createdAt: new Date(1650911154090) },
-      { _id: '5', title: 'Post 5', createdAt: new Date(1650911154090) },
-      { _id: '6', title: 'Post 6', createdAt: new Date(1650911154090) },
-      { _id: '7', title: 'Post 7', createdAt: new Date(1650911154090) },
-      { _id: '8', title: 'Post 8', createdAt: new Date(1650911154090) },
-      { _id: '9', title: 'Post 9', createdAt: new Date(1650911154090) },
-      { _id: '10', title: 'Post 10', createdAt: new Date(1650911154090) },
-      { _id: '11', title: 'Post 11', createdAt: new Date(1650911154090) },
-      { _id: '12', title: 'Post 12', createdAt: new Date(1650911154090) },
-    ]
+    const parsedPosts = getTestStoredPosts()
     const cachedPosts = parsedPosts.map((post) =>
       JSON.stringify(post, fieldsOrder)
     )
@@ -181,20 +162,7 @@ describe('PostService.findAllPosts', () => {
   })
 
   it('Fetches posts from both cache and database when cache does not have enough posts', async () => {
-    const storedPosts = [
-      { _id: '1', title: 'Post 1', createdAt: new Date(1650911154090) },
-      { _id: '2', title: 'Post 2', createdAt: new Date(1650911154090) },
-      { _id: '3', title: 'Post 3', createdAt: new Date(1650911154090) },
-      { _id: '4', title: 'Post 4', createdAt: new Date(1650911154090) },
-      { _id: '5', title: 'Post 5', createdAt: new Date(1650911154090) },
-      { _id: '6', title: 'Post 6', createdAt: new Date(1650911154090) },
-      { _id: '7', title: 'Post 7', createdAt: new Date(1650911154090) },
-      { _id: '8', title: 'Post 8', createdAt: new Date(1650911154090) },
-      { _id: '9', title: 'Post 9', createdAt: new Date(1650911154090) },
-      { _id: '10', title: 'Post 10', createdAt: new Date(1650911154090) },
-      { _id: '11', title: 'Post 11', createdAt: new Date(1650911154090) },
-      { _id: '12', title: 'Post 12', createdAt: new Date(1650911154090) },
-    ]
+    const storedPosts = getTestStoredPosts()
     const cachedPosts = storedPosts
       .slice(0, 5)
       .map((post) => JSON.stringify(post))
@@ -224,20 +192,7 @@ describe('PostService.findAllPosts', () => {
 
   it('Caches posts if cache is empty', async () => {
     // given
-    const storedPosts = [
-      { _id: '1', title: 'Post 1', createdAt: new Date(1650911154090) },
-      { _id: '2', title: 'Post 2', createdAt: new Date(1650911154090) },
-      { _id: '3', title: 'Post 3', createdAt: new Date(1650911154090) },
-      { _id: '4', title: 'Post 4', createdAt: new Date(1650911154090) },
-      { _id: '5', title: 'Post 5', createdAt: new Date(1650911154090) },
-      { _id: '6', title: 'Post 6', createdAt: new Date(1650911154090) },
-      { _id: '7', title: 'Post 7', createdAt: new Date(1650911154090) },
-      { _id: '8', title: 'Post 8', createdAt: new Date(1650911154090) },
-      { _id: '9', title: 'Post 9', createdAt: new Date(1650911154090) },
-      { _id: '10', title: 'Post 10', createdAt: new Date(1650911154090) },
-      { _id: '11', title: 'Post 11', createdAt: new Date(1650911154090) },
-      { _id: '12', title: 'Post 12', createdAt: new Date(1650911154090) },
-    ]
+    const storedPosts = getTestStoredPosts()
     const expectedPostQuery = {
       posts: storedPosts.slice(0, 10),
       hasMore: true,
@@ -278,65 +233,6 @@ describe('PostService.findAllPosts', () => {
 })
 
 describe('PostService.findPostsByTerm', () => {
-  const storedPosts = [
-    {
-      _id: '10',
-      title: 'Midnight',
-      tag: [{ _id: '1', content: 'cat' }],
-    },
-    {
-      _id: '9',
-      title: 'Morning',
-      tag: [],
-    },
-    {
-      _id: '8',
-      title: 'Daylight',
-      tag: [{ _id: '1', content: 'cat' }],
-    },
-    {
-      _id: '7',
-      title: 'Sunshine',
-      tag: [{ _id: '2', content: 'dog' }],
-    },
-    {
-      _id: '6',
-      title: 'Dawn',
-      tag: [{ _id: '1', content: 'cat' }],
-    },
-    {
-      _id: '5',
-      title: 'Dusk',
-      tag: [{ _id: '2', content: 'dog' }],
-    },
-    {
-      _id: '4',
-      title: 'Noon',
-      tag: [{ _id: '2', content: 'dog' }],
-    },
-    {
-      _id: '3',
-      title: 'Sun',
-      tag: [
-        { _id: '1', content: 'cat' },
-        { _id: '2', content: 'dog' },
-      ],
-    },
-    {
-      _id: '2',
-      title: 'Moon',
-      tag: [
-        { _id: '1', content: 'cat' },
-        { _id: '2', content: 'dog' },
-      ],
-    },
-    {
-      _id: '1',
-      title: 'Apple',
-      tag: [{ _id: '1', content: 'cat' }],
-    },
-  ]
-
   it('Finds posts with titles containing search term', async () => {
     // given
     const term = 'a'
@@ -431,8 +327,6 @@ describe('PostService.findPostsByTag', () => {
       const tagIndex = tags.findIndex((tag) => tag.content === tagContent)
       return tagIndex !== -1
     }
-    const st = []
-    st.in
     const tag = 'cat'
     const expectedPosts = storedPosts.filter((post) =>
       containTag(post.tags, tag)
@@ -463,11 +357,7 @@ describe('PostService.createPost', () => {
         tags: 'cat dog',
       },
     }
-    const user = {
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
 
     await expect(async () => {
@@ -485,11 +375,7 @@ describe('PostService.createPost', () => {
         tags: 'cat dog',
       },
     }
-    const user = {
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
 
     // then
@@ -508,17 +394,12 @@ describe('PostService.createPost', () => {
         tags: '',
       },
     }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1', posts: [] }
     const expectedPost = {
       _id: '1',
       author: user._id,
-      title: 'New post',
-      body: 'Hello world',
+      title: args.postInput.title,
+      body: args.postInput.body,
       image: 'someKey',
       tags: [],
     }
@@ -537,8 +418,8 @@ describe('PostService.createPost', () => {
     expect(post).toEqual(expectedPost)
     expect(mockStore.postRepo.insert).toHaveBeenLastCalledWith({
       author: user._id,
-      title: 'New post',
-      body: 'Hello world',
+      title: args.postInput.title,
+      body: args.postInput.body,
       image: 'someKey',
     })
     expect(mockStore.userRepo.save).toHaveBeenLastCalledWith({
@@ -557,18 +438,11 @@ describe('PostService.createPost', () => {
         tags: 'apple tomato',
       },
     }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1', posts: [] }
     const expectedPost = {
+      ...args.postInput,
       _id: '1',
       author: user._id,
-      title: 'New post',
-      body: 'Hello world',
-      image: '',
       tags: [
         { tagId: '1', content: 'apple' },
         { tagId: '2', content: 'tomato' },
@@ -596,8 +470,8 @@ describe('PostService.createPost', () => {
     expect(post).toEqual(expectedPost)
     expect(mockStore.postRepo.insert).toHaveBeenLastCalledWith({
       author: user._id,
-      title: 'New post',
-      body: 'Hello world',
+      title: args.postInput.title,
+      body: args.postInput.body,
       tags: [
         { tagId: '1', content: 'apple' },
         { tagId: '2', content: 'tomato' },
@@ -619,18 +493,11 @@ describe('PostService.createPost', () => {
         tags: '',
       },
     }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1', posts: [] }
     const expectedPost = {
+      ...args.postInput,
       _id: '1',
       author: user._id,
-      title: 'New post',
-      body: 'Hello world',
-      image: '',
       tags: [],
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
@@ -649,8 +516,8 @@ describe('PostService.createPost', () => {
     expect(post).toEqual(expectedPost)
     expect(mockStore.postRepo.insert).toHaveBeenLastCalledWith({
       author: user._id,
-      title: 'New post',
-      body: 'Hello world',
+      title: args.postInput.title,
+      body: args.postInput.body,
     })
     expect(mockStore.userRepo.save).toHaveBeenLastCalledWith({
       ...user,
@@ -681,11 +548,7 @@ describe('PostService.editPost', () => {
         tags: 'cat dog',
       },
     }
-    const user = {
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
 
     await expect(async () => {
@@ -703,11 +566,7 @@ describe('PostService.editPost', () => {
         tags: 'cat dog',
       },
     }
-    const user = {
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
 
     // then
@@ -725,11 +584,7 @@ describe('PostService.editPost', () => {
         body: 'New body',
       },
     }
-    const user = {
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(undefined)
 
@@ -750,15 +605,10 @@ describe('PostService.editPost', () => {
         tags: 'apple tomato',
       },
     }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [{ _id: '3' }],
-    }
+    const user = { _id: '1', posts: [{ _id: '3' }] }
     const oldPost = {
       _id: '1',
-      author: user._id,
+      author: '2',
       title: 'Old title',
       body: 'Old body',
       image: '',
@@ -799,10 +649,9 @@ describe('PostService.editPost', () => {
       tags: [{ tagId: '3', content: 'lemon' }],
     }
     const newPost = {
-      _id: '1',
-      author: user._id,
-      title: 'New title',
-      body: 'New body',
+      ...oldPost,
+      title: args.postInput.title,
+      body: args.postInput.body,
       image: '',
       tags: [
         { tagId: '1', content: 'apple' },
@@ -845,12 +694,7 @@ describe('PostService.editPost', () => {
         tags: '',
       },
     }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [{ _id: '1' }],
-    }
+    const user = { _id: '1', posts: [{ _id: '1' }] }
     const oldPost = {
       _id: '1',
       author: user._id,
@@ -860,12 +704,10 @@ describe('PostService.editPost', () => {
       tags: [],
     }
     const newPost = {
-      _id: '1',
-      author: user._id,
-      title: 'New title',
-      body: 'New body',
+      ...oldPost,
+      title: args.postInput.title,
+      body: args.postInput.body,
       image: 'someKey',
-      tags: [],
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(oldPost)
@@ -890,12 +732,7 @@ describe('PostService.editPost', () => {
         tags: '',
       },
     }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [{ _id: '1' }],
-    }
+    const user = { _id: '1', posts: [{ _id: '1' }] }
     const oldPost = {
       _id: '1',
       author: user._id,
@@ -905,12 +742,9 @@ describe('PostService.editPost', () => {
       tags: [],
     }
     const newPost = {
-      _id: '1',
-      author: user._id,
-      title: 'New title',
-      body: 'New body',
-      image: '',
-      tags: [],
+      ...oldPost,
+      title: args.postInput.title,
+      body: args.postInput.body,
     }
     const cachedPosts = [
       {
@@ -944,11 +778,7 @@ describe('PostService.deletePost', () => {
   it('Fails if post does not exist', async () => {
     // given
     const postId = '1'
-    const user = {
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1', posts: [] }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(undefined)
 
@@ -961,19 +791,11 @@ describe('PostService.deletePost', () => {
   it('Fails if user does not own post', async () => {
     // given
     const postId = '1'
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [{ _id: '2' }],
-    }
+    const user = { _id: '1', posts: [{ _id: '2' }] }
     const post = {
       _id: '1',
       author: '3',
-      title: 'Title',
-      body: 'Body',
       image: '',
-      tags: [{ tagId: '3', content: 'lemon' }],
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(post)
@@ -988,19 +810,11 @@ describe('PostService.deletePost', () => {
   it('Deletes image from S3', async () => {
     // given
     const postId = '1'
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [{ _id: '1' }],
-    }
+    const user = { _id: '1', posts: [{ _id: '1' }] }
     const post = {
       _id: '1',
       author: '1',
-      title: 'Title',
-      body: 'Body',
       image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(post)
@@ -1017,16 +831,8 @@ describe('PostService.deletePost', () => {
 describe('PostService.createComment', () => {
   it('Fails if post does not exist', async () => {
     // given
-    args = {
-      postId: '1',
-      body: 'New comment',
-    }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    args = { postId: '1', body: 'New comment' }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(undefined)
 
@@ -1038,25 +844,9 @@ describe('PostService.createComment', () => {
 
   it('Fails if comment body is empty', async () => {
     // given
-    args = {
-      postId: '1',
-      body: '',
-    }
-    const post = {
-      _id: '1',
-      author: '2',
-      title: 'Title',
-      body: 'Body',
-      image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
-      comments: [],
-    }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    args = { postId: '1', body: '' }
+    const post = { _id: '1', comments: [] }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(post)
 
@@ -1068,17 +858,9 @@ describe('PostService.createComment', () => {
 
   it('Adds comment to post', async () => {
     // given
-    args = {
-      postId: '1',
-      body: 'New comment',
-    }
+    args = { postId: '1', body: 'New comment' }
     const post = {
       _id: '1',
-      author: '2',
-      title: 'Title',
-      body: 'Body',
-      image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
       comments: [
         { author: '3', body: 'A random comment' },
         { author: '2', body: 'Another random comment' },
@@ -1086,23 +868,13 @@ describe('PostService.createComment', () => {
     }
     const expectedPost = {
       _id: '1',
-      author: '2',
-      title: 'Title',
-      body: 'Body',
-      image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
       comments: [
         { author: '3', body: 'A random comment' },
         { author: '2', body: 'Another random comment' },
         { author: '1', body: 'New comment' },
       ],
     }
-    const user = {
-      _id: '1',
-      username: 'john',
-      email: 'john@example.com',
-      posts: [],
-    }
+    const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(post)
 
@@ -1117,13 +889,9 @@ describe('PostService.createComment', () => {
 describe('PostService.likePost', () => {
   it('Fails if post does not exist', async () => {
     // given
-    args = {
-      postId: '1',
-    }
+    args = { postId: '1' }
     const user = {
       _id: '1',
-      username: 'john',
-      email: 'john@example.com',
       posts: [],
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
@@ -1137,40 +905,19 @@ describe('PostService.likePost', () => {
 
   it('Unlikes post if user already liked post', async () => {
     // given
-    args = {
-      postId: '1',
-      body: 'New comment',
-    }
+    args = { postId: '1' }
     const post = {
       _id: '1',
       author: '2',
-      title: 'Title',
-      body: 'Body',
-      image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
-      comments: [
-        { author: '3', body: 'A random comment' },
-        { author: '2', body: 'Another random comment' },
-      ],
       likes: [{ _id: '1' }, { _id: '2' }],
     }
     const expectedPost = {
       _id: '1',
       author: '2',
-      title: 'Title',
-      body: 'Body',
-      image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
-      comments: [
-        { author: '3', body: 'A random comment' },
-        { author: '2', body: 'Another random comment' },
-      ],
       likes: [{ _id: '2' }],
     }
     const user = {
       _id: '1',
-      username: 'john',
-      email: 'john@example.com',
       posts: [],
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
@@ -1185,40 +932,19 @@ describe('PostService.likePost', () => {
 
   it('Likes post if user has not liked it', async () => {
     // given
-    args = {
-      postId: '1',
-      body: 'New comment',
-    }
+    args = { postId: '1' }
     const post = {
       _id: '1',
       author: '2',
-      title: 'Title',
-      body: 'Body',
-      image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
-      comments: [
-        { author: '3', body: 'A random comment' },
-        { author: '2', body: 'Another random comment' },
-      ],
       likes: [{ _id: '2' }],
     }
     const expectedPost = {
       _id: '1',
       author: '2',
-      title: 'Title',
-      body: 'Body',
-      image: 'someKey',
-      tags: [{ tagId: '3', content: 'lemon' }],
-      comments: [
-        { author: '3', body: 'A random comment' },
-        { author: '2', body: 'Another random comment' },
-      ],
       likes: [{ _id: '2' }, '1'],
     }
     const user = {
       _id: '1',
-      username: 'john',
-      email: 'john@example.com',
       posts: [],
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
