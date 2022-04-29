@@ -6,6 +6,7 @@ import nProgress from 'nprogress'
 import {
   DELETE_POST,
   GET_ALL_POSTS,
+  GET_ME,
   GET_POST_BY_ID,
   LIKE_POST,
 } from '../../graphql'
@@ -48,7 +49,7 @@ const SinglePost = (props) => {
     nProgress.start()
     await deletePost({
       variables: { postId },
-      refetchQueries: [{ query: GET_ALL_POSTS }],
+      refetchQueries: [{ query: GET_ALL_POSTS }, {query: GET_ME}],
     }).catch((e) => console.error(e))
     nProgress.done()
     navigate('/')

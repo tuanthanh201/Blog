@@ -44,6 +44,7 @@ const findManyAndSort = async (
     throw new Error(error)
   }
 }
+
 const deleteById = async (id) => {
   try {
     return await Post.findByIdAndDelete(id)
