@@ -354,8 +354,11 @@ class PostService extends DataSource {
           -1
         )
         const cachedPostsLength = cachedPosts.length
-        const cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
-        const findOption = { _id: { $lt: cursor } }
+        let cursor
+        if (cachedPostsLength > 0) {
+          cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
+        }
+        const findOption = cursor ? { _id: { $lt: cursor } } : {}
         const fetchedPosts = await this.store.postRepo.findManyAndSort(
           findOption,
           { _id: -1 },
@@ -385,7 +388,27 @@ class PostService extends DataSource {
         throw new UserInputError('Comment must not be empty')
       }
       post.comments.push({ author: user._id, body })
-      return await this.store.postRepo.save(post)
+      const savedPost = await this.store.postRepo.save(post)
+
+      // edit cache
+      const cachedPosts = await this.context.redis.lRange(
+        this.cachedPostsKey,
+        0,
+        -1
+      )
+      const cachedPostsLength = cachedPosts.length
+      for (let i = 0; i < cachedPostsLength; i++) {
+        const cachedPost = JSON.parse(cachedPosts[i])
+        if (cachedPost._id.toString() === post._id.toString()) {
+          await this.context.redis.lSet(
+            this.cachedPostsKey,
+            i,
+            JSON.stringify(savedPost, fieldsOrder)
+          )
+          break
+        }
+      }
+      return savedPost
     } catch (error) {
       throw new Error(error)
     }
@@ -411,7 +434,27 @@ class PostService extends DataSource {
         // like
         post.likes.push(user._id)
       }
-      return await this.store.postRepo.save(post)
+      const savedPost = await this.store.postRepo.save(post)
+
+      // edit cache
+      const cachedPosts = await this.context.redis.lRange(
+        this.cachedPostsKey,
+        0,
+        -1
+      )
+      const cachedPostsLength = cachedPosts.length
+      for (let i = 0; i < cachedPostsLength; i++) {
+        const cachedPost = JSON.parse(cachedPosts[i])
+        if (cachedPost._id.toString() === post._id.toString()) {
+          await this.context.redis.lSet(
+            this.cachedPostsKey,
+            i,
+            JSON.stringify(savedPost, fieldsOrder)
+          )
+          break
+        }
+      }
+      return savedPost
     } catch (error) {
       throw new Error(error)
     }
