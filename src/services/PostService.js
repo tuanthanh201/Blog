@@ -27,7 +27,7 @@ class PostService extends DataSource {
     this.store = store
     this.limit = 11
     this.cachedPostsKey = 'cachedPosts'
-    this.cachedPostsExpiration = 60 * 60
+    this.cachedPostsExpiration = 30 * 60
     this.cacheSize = 100
   }
 
