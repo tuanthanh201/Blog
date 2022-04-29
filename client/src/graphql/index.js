@@ -19,20 +19,6 @@ export const GET_ALL_POSTS = gql`
           id
           content
         }
-        likeCount
-        likes {
-          id
-        }
-        commentCount
-        comments {
-          id
-          author {
-            id
-            username
-          }
-          body
-          createdAt
-        }
         createdAt
       }
     }
@@ -91,20 +77,6 @@ export const FIND_POSTS_BY_TERM = gql`
           id
           content
         }
-        likeCount
-        likes {
-          id
-        }
-        commentCount
-        comments {
-          id
-          author {
-            id
-            username
-          }
-          body
-          createdAt
-        }
         createdAt
       }
     }
@@ -129,20 +101,6 @@ export const FIND_POSTS_BY_TAG = gql`
           id
           content
         }
-        likeCount
-        likes {
-          id
-        }
-        commentCount
-        comments {
-          id
-          author {
-            id
-            username
-          }
-          body
-          createdAt
-        }
         createdAt
       }
     }
@@ -163,13 +121,21 @@ export const GET_ME = gql`
     getMe {
       id
       username
-      email
-      bio
       posts {
+        id
+        author {
+          id
+          username
+        }
         title
         body
+        image
+        tags {
+          id
+          content
+        }
+        createdAt
       }
-      createdAt
     }
   }
 `
@@ -192,20 +158,6 @@ export const GET_USER_BY_ID = gql`
         tags {
           id
           content
-        }
-        likeCount
-        likes {
-          id
-        }
-        commentCount
-        comments {
-          id
-          author {
-            id
-            username
-          }
-          body
-          createdAt
         }
         createdAt
       }
@@ -272,20 +224,6 @@ export const UPDATE_BIO = gql`
           id
           content
         }
-        likeCount
-        likes {
-          id
-        }
-        commentCount
-        comments {
-          id
-          author {
-            id
-            username
-          }
-          body
-          createdAt
-        }
         createdAt
       }
     }
@@ -306,20 +244,6 @@ export const CREATE_POST = gql`
       tags {
         id
         content
-      }
-      likeCount
-      likes {
-        id
-      }
-      commentCount
-      comments {
-        id
-        author {
-          id
-          username
-        }
-        body
-        createdAt
       }
       createdAt
     }
