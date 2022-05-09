@@ -227,7 +227,7 @@ describe('PostService.findAllPosts', () => {
     )
     expect(postService.context.redis.expire).toHaveBeenLastCalledWith(
       'cachedPosts',
-      60 * 60
+      30 * 60
     )
   })
 })
@@ -532,7 +532,7 @@ describe('PostService.createPost', () => {
     )
     expect(postService.context.redis.expire).toHaveBeenLastCalledWith(
       'cachedPosts',
-      60 * 60
+      30 * 60
     )
   })
 })
@@ -867,16 +867,13 @@ describe('PostService.createComment', () => {
       ],
     }
     const expectedPost = {
-      _id: '1',
-      comments: [
-        { author: '3', body: 'A random comment' },
-        { author: '2', body: 'Another random comment' },
-        { author: '1', body: 'New comment' },
-      ],
+      ...post,
+      comments: [...post.comments, { author: '1', body: 'New comment' }],
     }
     const user = { _id: '1' }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(post)
+    postService.context.redis.lRange.mockReturnValueOnce([])
 
     // when
     await postService.createComment(args)
@@ -912,8 +909,7 @@ describe('PostService.likePost', () => {
       likes: [{ _id: '1' }, { _id: '2' }],
     }
     const expectedPost = {
-      _id: '1',
-      author: '2',
+      ...post,
       likes: [{ _id: '2' }],
     }
     const user = {
@@ -922,6 +918,7 @@ describe('PostService.likePost', () => {
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(post)
+    postService.context.redis.lRange.mockReturnValueOnce([])
 
     // when
     await postService.likePost(args)
@@ -939,9 +936,8 @@ describe('PostService.likePost', () => {
       likes: [{ _id: '2' }],
     }
     const expectedPost = {
-      _id: '1',
-      author: '2',
-      likes: [{ _id: '2' }, '1'],
+      ...post,
+      likes: [...post.likes, '1'],
     }
     const user = {
       _id: '1',
@@ -949,11 +945,46 @@ describe('PostService.likePost', () => {
     }
     mockStore.userRepo.findById.mockReturnValueOnce(user)
     mockStore.postRepo.findById.mockReturnValueOnce(post)
+    postService.context.redis.lRange.mockReturnValueOnce([])
 
     // when
     await postService.likePost(args)
 
     // then
     expect(mockStore.postRepo.save).toHaveBeenLastCalledWith(expectedPost)
+  })
+
+  it('Updates cache if post is cached', async () => {
+    // given
+    args = { postId: '1' }
+    const post = {
+      _id: '1',
+      author: '2',
+      likes: [{ _id: '2' }],
+    }
+    const postToSave = {
+      ...post,
+      likes: [...post.likes, '1'],
+    }
+    const expectedPost = {
+      ...post,
+      likes: [...post.likes, { _id: '1' }],
+    }
+    const user = {
+      _id: '1',
+      posts: [],
+    }
+    mockStore.userRepo.findById.mockReturnValueOnce(user)
+    mockStore.postRepo.findById.mockReturnValueOnce(post)
+    mockStore.postRepo.save.mockReturnValueOnce(expectedPost)
+    postService.context.redis.lRange.mockReturnValueOnce([
+      JSON.stringify(post, fieldsOrder),
+    ])
+
+    // when
+    await postService.likePost(args)
+
+    // then
+    expect(mockStore.postRepo.save).toHaveBeenLastCalledWith(postToSave)
   })
 })
