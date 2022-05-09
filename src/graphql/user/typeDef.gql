@@ -16,7 +16,6 @@ type User {
   posts: [Post]
   postsCount: Int!
   createdAt: String!
-  subscribers: [User]
 }
 extend type Query {
   findUserById(userId: ID!): User
@@ -24,7 +23,6 @@ extend type Query {
 }
 extend type Mutation {
   updateBio(userId: ID!, bio: String!): User
-  subscribe(userId: ID!): User
   register(registerInput: RegisterInput!): User!
   login(loginInput: LoginInput!): User!
   logout: String
