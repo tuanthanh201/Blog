@@ -46,7 +46,7 @@ class PostService extends DataSource {
   async findPostsByIds(postIds) {
     try {
       return await this.store.postRepo.findManyAndSort(
-        { $in: postIds },
+        { _id: { $in: postIds } },
         { _id: -1 }
       )
     } catch (error) {
