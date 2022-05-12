@@ -143,10 +143,7 @@ class PostService extends DataSource {
       const searchOption = { $regex: `${term}`, $options: 'i' }
       const findOption = cursor
         ? {
-            $and: [
-              { _id: { $lt: cursor } },
-              { $or: [{ title: searchOption }] },
-            ],
+            $and: [{ _id: { $lt: cursor } }, { title: searchOption }],
           }
         : { title: searchOption }
       const posts = await this.store.postRepo.findManyAndSort(
