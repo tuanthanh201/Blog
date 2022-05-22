@@ -98,7 +98,7 @@ describe('PostService.findPostsByIds', () => {
 
     // then
     expect(mockStore.postRepo.findManyAndSort).toHaveBeenLastCalledWith(
-      { $in: postIds },
+      { _id: { $in: postIds } },
       { _id: -1 }
     )
     expect(posts).toStrictEqual(expectedPosts)

@@ -2,7 +2,7 @@ const connectToDB = require('./db/mongoose')
 const setupApolloServer = require('./apolloServer')
 
 const startServer = async () => {
-  await connectToDB()
+  connectToDB()
   await setupApolloServer()
 }
 

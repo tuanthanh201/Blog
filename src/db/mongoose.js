@@ -10,7 +10,7 @@ const connectToDB = () => {
       console.log('Connected to MongoDb')
     })
     .catch(() => {
-      console.log('Failed to connect to MongoDB')
+      // console.log('Failed to connect to MongoDB')
     })
   return mongoose
 }
