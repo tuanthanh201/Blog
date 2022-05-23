@@ -9,7 +9,7 @@
     "server:dev": "env-cmd -e development nodemon --ignore client --ext js,gql src/index",
     "server:test": "env-cmd -e test nodemon --ignore client --ext js,gql src/index",
     "test:unit": "jest unit --verbose",
-    "test:int": "env-cmd -e test jest int  --runInBand --verbose"
+    "test:int": "env-cmd -e test jest int --runInBand --verbose"
   },
   "jest": {
     "globalSetup": "./src/__test__/globalSetup.js",
