@@ -14,3 +14,8 @@ Link to web app: :link: https://www.my-blog-247.com/
 - Code is covered by unit and integration tests :100::100:
 - Backend: MongoDB, Express, Nodejs, GraphQL, Apollo Server :sunglasses::sunglasses::sunglasses:
 - Frontend: React, Apollo Client :+1::+1:
+
+## 3/ Testing:
+
+### Backend: Unit + Integration tests (Jest) :heavy_check_mark::heavy_check_mark::heavy_check_mark:
+![Screenshot 2022-06-03 224723](https://user-images.githubusercontent.com/55332021/171976010-4551351f-6793-45b8-9d2b-8de2b1816d1a.jpg)
