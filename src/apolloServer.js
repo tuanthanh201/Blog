@@ -26,14 +26,17 @@ const dataSources = () => ({
 
 const setupApolloServer = async () => {
   const app = express()
-  const redis = createClient({
-    socket: {
-      host: process.env.REDIS_HOST,
-      port: process.env.REDIS_PORT,
-    },
-  })
-  redis.on('connect', () => console.log('Connected to Redis'))
-  await redis.connect()
+  let redis
+  if (process.env.STATUS == 'PRODUCTION') {
+    redis = createClient({
+      socket: {
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+      },
+    })
+    redis.on('connect', () => console.log('Connected to Redis'))
+    await redis.connect()
+  }
 
   app.use(cookieParser())
 

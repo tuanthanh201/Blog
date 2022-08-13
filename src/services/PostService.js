@@ -69,68 +69,76 @@ class PostService extends DataSource {
 
   async findAllPosts(cursor) {
     try {
-      const cachedPosts = await this.context.redis.lRange(
-        this.cachedPostsKey,
-        0,
-        -1
-      )
-      const cachedPostsLength = cachedPosts.length
-      let postsToFetch = this.limit
       let posts = []
-      if (cachedPostsLength !== 0) {
-        const parsedPosts = cachedPosts.map((post) => {
-          let parsedPost = JSON.parse(post)
-          parsedPost.createdAt = new Date(parsedPost.createdAt)
-          return parsedPost
-        })
-        let postIndex = parsedPosts.findIndex((post) => post._id === cursor)
-        let postIsCached = false
-        if (postIndex !== -1) {
-          postIsCached = true
-          postIndex++
-        } else if (postIndex === -1 && !cursor) {
-          postIsCached = true
-          postIndex = 0
-        }
-        if (postIsCached) {
-          for (let i = postIndex; i < postIndex + this.limit; i++) {
-            if (i >= cachedPostsLength) {
-              break
+      if (this.context.redis) {
+        const cachedPosts = await this.context.redis.lRange(
+          this.cachedPostsKey,
+          0,
+          -1
+        )
+        const cachedPostsLength = cachedPosts.length
+        let postsToFetch = this.limit
+        if (cachedPostsLength !== 0) {
+          const parsedPosts = cachedPosts.map((post) => {
+            let parsedPost = JSON.parse(post)
+            parsedPost.createdAt = new Date(parsedPost.createdAt)
+            return parsedPost
+          })
+          let postIndex = parsedPosts.findIndex((post) => post._id === cursor)
+          let postIsCached = false
+          if (postIndex !== -1) {
+            postIsCached = true
+            postIndex++
+          } else if (postIndex === -1 && !cursor) {
+            postIsCached = true
+            postIndex = 0
+          }
+          if (postIsCached) {
+            for (let i = postIndex; i < postIndex + this.limit; i++) {
+              if (i >= cachedPostsLength) {
+                break
+              }
+              posts.push(parsedPosts[i])
+              cursor = parsedPosts[i]._id
+              postsToFetch--
             }
-            posts.push(parsedPosts[i])
-            cursor = parsedPosts[i]._id
-            postsToFetch--
           }
         }
-      }
-      if (postsToFetch !== 0) {
-        const findOption = cursor ? { _id: { $lt: cursor } } : {}
-        const fetchedPosts = await this.store.postRepo.findManyAndSort(
-          findOption,
-          { _id: -1 },
-          postsToFetch
-        )
-        posts = posts.concat(fetchedPosts)
-      }
-      if (cachedPostsLength === 0) {
-        let postsToCache = await this.store.postRepo.findManyAndSort(
+        if (postsToFetch !== 0) {
+          const findOption = cursor ? { _id: { $lt: cursor } } : {}
+          const fetchedPosts = await this.store.postRepo.findManyAndSort(
+            findOption,
+            { _id: -1 },
+            postsToFetch
+          )
+          posts = posts.concat(fetchedPosts)
+        }
+        if (cachedPostsLength === 0) {
+          let postsToCache = await this.store.postRepo.findManyAndSort(
+            {},
+            { _id: -1 },
+            this.cacheSize
+          )
+          postsToCache = postsToCache.map((post) =>
+            JSON.stringify(post, fieldsOrder)
+          )
+          if (postsToCache.length !== 0) {
+            await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+          }
+          const timeLeft = await this.context.redis.ttl(this.cachedPostsKey)
+          if (cacheExpired(timeLeft)) {
+            await this.context.redis.expire(
+              this.cachedPostsKey,
+              this.cachedPostsExpiration
+            )
+          }
+        }
+      } else {
+        posts = await this.store.postRepo.findManyAndSort(
           {},
           { _id: -1 },
           this.cacheSize
         )
-        postsToCache = postsToCache.map((post) =>
-          JSON.stringify(post, fieldsOrder)
-        )
-        if (postsToCache.length !== 0) {
-          await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
-        }
-        const timeLeft = await this.context.redis.ttl(this.cachedPostsKey)
-        if (cacheExpired(timeLeft)) {
-          await this.context.redis.expire(
-            this.cachedPostsKey,
-            this.cachedPostsExpiration
-          )
-        }
       }
       return this.getPostQuery(posts)
     } catch (error) {
@@ -218,22 +226,24 @@ class PostService extends DataSource {
       await this.store.userRepo.save(user)
 
       // store post into cache
-      const cachedPostsCount = await this.context.redis.lLen(
-        this.cachedPostsKey
-      )
-      if (cachedPostsCount === this.cacheSize) {
-        await this.context.redis.rPop(this.cachedPostsKey)
-      }
-      await this.context.redis.lPush(
-        this.cachedPostsKey,
-        JSON.stringify(newPost, fieldsOrder)
-      )
-      const timeLeft = await this.context.redis.ttl(this.cachedPostsKey)
-      if (cacheExpired(timeLeft)) {
-        await this.context.redis.expire(
-          this.cachedPostsKey,
-          this.cachedPostsExpiration
+      if (this.context.redis) {
+        const cachedPostsCount = await this.context.redis.lLen(
+          this.cachedPostsKey
         )
+        if (cachedPostsCount === this.cacheSize) {
+          await this.context.redis.rPop(this.cachedPostsKey)
+        }
+        await this.context.redis.lPush(
+          this.cachedPostsKey,
+          JSON.stringify(newPost, fieldsOrder)
+        )
+        const timeLeft = await this.context.redis.ttl(this.cachedPostsKey)
+        if (cacheExpired(timeLeft)) {
+          await this.context.redis.expire(
+            this.cachedPostsKey,
+            this.cachedPostsExpiration
+          )
+        }
       }
       return newPost
     } catch (error) {
@@ -290,21 +300,23 @@ class PostService extends DataSource {
         post.body = postInput.body
 
         // edit cache
-        const cachedPosts = await this.context.redis.lRange(
-          this.cachedPostsKey,
-          0,
-          -1
-        )
-        const cachedPostsLength = cachedPosts.length
-        for (let i = 0; i < cachedPostsLength; i++) {
-          const cachedPost = JSON.parse(cachedPosts[i])
-          if (cachedPost._id.toString() === post._id.toString()) {
-            await this.context.redis.lSet(
-              this.cachedPostsKey,
-              i,
-              JSON.stringify(post, fieldsOrder)
-            )
-            break
+        if (this.context.redis) {
+          const cachedPosts = await this.context.redis.lRange(
+            this.cachedPostsKey,
+            0,
+            -1
+          )
+          const cachedPostsLength = cachedPosts.length
+          for (let i = 0; i < cachedPostsLength; i++) {
+            const cachedPost = JSON.parse(cachedPosts[i])
+            if (cachedPost._id.toString() === post._id.toString()) {
+              await this.context.redis.lSet(
+                this.cachedPostsKey,
+                i,
+                JSON.stringify(post, fieldsOrder)
+              )
+              break
+            }
           }
         }
         return await this.store.postRepo.save(post)
@@ -337,35 +349,38 @@ class PostService extends DataSource {
       await this.store.postRepo.deleteById(postId)
       // remove post from user's posts
       await this.store.userRepo.save(user)
+
       // clean up cache is post is cached
-      const stringifiedPost = JSON.stringify(post, fieldsOrder)
-      const removedCachedPost = await this.context.redis.lRem(
-        this.cachedPostsKey,
-        0,
-        stringifiedPost
-      )
-      if (removedCachedPost !== 0) {
-        const cachedPosts = await this.context.redis.lRange(
+      if (this.context.redis) {
+        const stringifiedPost = JSON.stringify(post, fieldsOrder)
+        const removedCachedPost = await this.context.redis.lRem(
           this.cachedPostsKey,
           0,
-          -1
+          stringifiedPost
         )
-        const cachedPostsLength = cachedPosts.length
-        let cursor
-        if (cachedPostsLength > 0) {
-          cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
-        }
-        const findOption = cursor ? { _id: { $lt: cursor } } : {}
-        const fetchedPosts = await this.store.postRepo.findManyAndSort(
-          findOption,
-          { _id: -1 },
-          removedCachedPost
-        )
-        const postsToCache = fetchedPosts.map((post) =>
-          JSON.stringify(post, fieldsOrder)
-        )
-        if (postsToCache.length !== 0) {
-          await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+        if (removedCachedPost !== 0) {
+          const cachedPosts = await this.context.redis.lRange(
+            this.cachedPostsKey,
+            0,
+            -1
+          )
+          const cachedPostsLength = cachedPosts.length
+          let cursor
+          if (cachedPostsLength > 0) {
+            cursor = JSON.parse(cachedPosts[cachedPostsLength - 1])._id
+          }
+          const findOption = cursor ? { _id: { $lt: cursor } } : {}
+          const fetchedPosts = await this.store.postRepo.findManyAndSort(
+            findOption,
+            { _id: -1 },
+            removedCachedPost
+          )
+          const postsToCache = fetchedPosts.map((post) =>
+            JSON.stringify(post, fieldsOrder)
+          )
+          if (postsToCache.length !== 0) {
+            await this.context.redis.rPush(this.cachedPostsKey, postsToCache)
+          }
         }
       }
       return 'Post deleted'
@@ -388,21 +403,23 @@ class PostService extends DataSource {
       const savedPost = await this.store.postRepo.save(post)
 
       // edit cache
-      const cachedPosts = await this.context.redis.lRange(
-        this.cachedPostsKey,
-        0,
-        -1
-      )
-      const cachedPostsLength = cachedPosts.length
-      for (let i = 0; i < cachedPostsLength; i++) {
-        const cachedPost = JSON.parse(cachedPosts[i])
-        if (cachedPost._id.toString() === post._id.toString()) {
-          await this.context.redis.lSet(
-            this.cachedPostsKey,
-            i,
-            JSON.stringify(savedPost, fieldsOrder)
-          )
-          break
+      if (this.context.redis) {
+        const cachedPosts = await this.context.redis.lRange(
+          this.cachedPostsKey,
+          0,
+          -1
+        )
+        const cachedPostsLength = cachedPosts.length
+        for (let i = 0; i < cachedPostsLength; i++) {
+          const cachedPost = JSON.parse(cachedPosts[i])
+          if (cachedPost._id.toString() === post._id.toString()) {
+            await this.context.redis.lSet(
+              this.cachedPostsKey,
+              i,
+              JSON.stringify(savedPost, fieldsOrder)
+            )
+            break
+          }
         }
       }
       return savedPost
@@ -434,21 +451,23 @@ class PostService extends DataSource {
       const savedPost = await this.store.postRepo.save(post)
 
       // edit cache
-      const cachedPosts = await this.context.redis.lRange(
-        this.cachedPostsKey,
-        0,
-        -1
-      )
-      const cachedPostsLength = cachedPosts.length
-      for (let i = 0; i < cachedPostsLength; i++) {
-        const cachedPost = JSON.parse(cachedPosts[i])
-        if (cachedPost._id.toString() === post._id.toString()) {
-          await this.context.redis.lSet(
-            this.cachedPostsKey,
-            i,
-            JSON.stringify(savedPost, fieldsOrder)
-          )
-          break
+      if (this.context.redis) {
+        const cachedPosts = await this.context.redis.lRange(
+          this.cachedPostsKey,
+          0,
+          -1
+        )
+        const cachedPostsLength = cachedPosts.length
+        for (let i = 0; i < cachedPostsLength; i++) {
+          const cachedPost = JSON.parse(cachedPosts[i])
+          if (cachedPost._id.toString() === post._id.toString()) {
+            await this.context.redis.lSet(
+              this.cachedPostsKey,
+              i,
+              JSON.stringify(savedPost, fieldsOrder)
+            )
+            break
+          }
         }
       }
       return savedPost
